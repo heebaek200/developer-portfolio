@@ -125,7 +125,7 @@ test('실제 시연 파일을 재생하고 이전 사례 주소를 새 소속으
 });
 
 test('프로젝트에 귀속된 모든 기술 사례가 자체 도식과 근거를 제공한다', async ({ page }) => {
-  for (const [project, expectedCount] of [['creature', 5], ['study-room', 3]]) {
+  for (const [project, expectedCount] of [['creature', 8], ['study-room', 3]]) {
     await page.goto('/#/projects/' + project);
     const links = page.locator('.case-list').getByRole('link');
     await expect(links).toHaveCount(expectedCount);
@@ -143,16 +143,26 @@ test('프로젝트에 귀속된 모든 기술 사례가 자체 도식과 근거�
   await expect(page.getByRole('heading', { name: '현업 개발' })).toHaveCount(0);
 });
 
-test('팀원 담당 사례는 개인 기술 목록에 포함하지 않는다', async ({ page }) => {
+test('공동 육성에서 리뷰, QA 후속, 팀원 구현의 역할을 구분한다', async ({ page }) => {
   await page.goto('/#/engineering/qa');
-  await expect(page).toHaveURL(/#\/projects\/creature$/);
-  const credits = page.getByRole('row').filter({ hasText: '팀원 · 담당 사례' });
-  for (const title of ['아바타 렌더링 방식 선택', '공통 헤더 시즌 타이머 갱신', '부화 전 퀘스트 완료 오류 대응']) {
-    await expect(credits).toContainText(title);
-  }
-  for (const id of ['avatar-rendering', 'season-header', 'qa']) {
-    await expect(page.locator('a[href$="/cases/' + id + '"]')).toHaveCount(0);
-  }
+  await expect(page).toHaveURL(/#\/projects\/creature\/cases\/qa$/);
+  await expect(page.getByRole('main').locator('.meta')).toContainText(/이슈.*PR/);
+  await page.goto('/#/projects/creature/cases/season-header');
+  await expect(page.getByRole('main').locator('.meta')).toContainText('최초 리뷰·수정 요청·재리뷰 승인 / 팀원 · 코드 구현');
+  await page.goto('/#/projects/creature');
+  const credits = page.getByRole('row').filter({ hasText: '팀원 · 구현' });
+  await expect(credits).toContainText('아바타 렌더링 방식 선택');
+  await expect(credits).toContainText('공통 헤더 시즌 타이머 갱신');
+  await expect(page.locator('a[href$="/cases/avatar-rendering"]')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: '프로젝트 종료 후 팀 워크숍' })).toBeVisible();
+});
+
+test('결제 전이와 스케줄러 검증의 근거를 개별 사례에서 제공한다', async ({ page }) => {
+  await page.goto('/#/projects/creature/cases/payment');
+  await expect(page.locator('.state-transitions tbody tr')).toHaveCount(4);
+  await page.goto('/#/projects/creature/cases/scheduler');
+  await expect(page.locator('a[href$="/QA-02-rewards-scheduler.md"]')).toBeVisible();
+  await expect(page.locator('a[href$="/pull/86#issuecomment-6809447816"]')).toBeVisible();
 });
 
 test('홈의 첫 탐색이 개발 생산성으로 이어지고 자격증은 경력에 표시한다', async ({ page }) => {
@@ -165,6 +175,8 @@ test('홈의 첫 탐색이 개발 생산성으로 이어지고 자격증은 경�
   await expect(page).toHaveURL(/#\/productivity$/);
   await expect(main.getByRole('heading', { level: 1 })).toHaveText('개발 생산성');
   await expect(main.getByRole('row').filter({ hasText: 'STEYR' })).toContainText('공동 육성 종료 후 정립');
+  await expect(main.locator('.workflow-decisions > li')).toHaveCount(4);
+  await expect(main.locator('.workflow-decisions')).toContainText('REST·GraphQL');
   await expect(main.locator('[data-gallery="setup"] img')).toHaveCount(2);
   await page.goto('/#/career');
   await expect(main.getByRole('heading', { name: '업무 시스템과 복잡한 화면' })).toBeVisible();

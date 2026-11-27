@@ -72,6 +72,16 @@
 .career-chapter { margin-top: 2.1rem; }
 .career-chapter h3 { margin-bottom: .35rem; }
 
+/* 개발 절차의 입출력과 사례의 판단 근거를 본문 순서대로 배치한다. */
+.workflow-decisions { padding: 0; margin: 1.6rem 0; list-style: none; }
+.workflow-decisions > li, .case-expansion { margin-block: 1.6rem; padding-block-start: 1.2rem; border-block-start: 1px solid var(--line); }
+.workflow-decisions h3, .case-expansion :is(h2, h3) { margin: 0 0 .65rem; }
+.workflow-decisions dl { margin: 1rem 0; padding: .75rem 1rem; background: var(--surface); border-inline-start: 3px solid var(--accent); }
+.workflow-decisions dl > div { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: .25rem .75rem; }
+.workflow-decisions dl > div + div { margin-block-start: .35rem; }
+.workflow-decisions dt { font-weight: 750; }
+.workflow-decisions dd { margin: 0; }
+
 @media (max-width: 43rem) {
   .practice-principles > div { grid-template-columns: minmax(0, 1fr); }
 }

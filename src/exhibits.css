@@ -126,3 +126,12 @@
   .section-jump, .exhibit-action, .exhibit-dialog, .growth-film video { display: none; }
   .exhibit, .decision-diagram, .runtime-chart { break-inside: avoid; }
 }
+/* 거래에서 현재 상태와 전이 후 상태를 구분한다. */
+.state-transitions td span {
+  display: inline-block;
+  padding: .2rem .5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: .35rem;
+  font-weight: 650;
+}
