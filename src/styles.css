@@ -112,43 +112,54 @@ figcaption { margin-top: .4rem; font-size: .875rem; }
   th, td { padding-right: .45rem; overflow-wrap: anywhere; }
 }
 
-/* 제목, 소개, 근거가 읽는 순서에 맞춰 짧게 자리 잡는다. */
-@keyframes text-enter {
-  from { opacity: .55; transform: translateY(.55rem); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes media-enter {
-  from { opacity: .7; clip-path: inset(3% 0); }
-  to { opacity: 1; clip-path: inset(0); }
-}
-@keyframes outline-enter {
-  from { opacity: .65; transform: translateY(-.3rem); }
-  to { opacity: 1; transform: translateY(0); }
+/* 각 콘텐츠 블록은 읽는 순서에 맞춰 좌우에서 들어오며 선명해진다. */
+@keyframes slide-fade-in {
+  from { opacity: .12; transform: translateX(var(--enter-x)); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 @media screen and (prefers-reduced-motion: no-preference) {
+  .site-layout {
+    /* 스크롤 컨테이너를 만들지 않고 이동 중 가로 넘침만 잘라낸다. */
+    overflow-x: clip;
+    overflow-clip-margin: .35rem;
+    --slide-distance: clamp(1.25rem, 6vw, 5rem);
+    --from-left: calc(-1 * var(--slide-distance));
+    --from-right: var(--slide-distance);
+    --enter-x: var(--from-left);
+    --enter-ease: cubic-bezier(.18,.72,.26,1);
+  }
   .site-outline a, button { transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease; }
-  .hero > *, .page-heading > * { animation: text-enter 360ms cubic-bezier(.2,.65,.3,1) both; }
-  .hero h1 { animation-delay: 45ms; }
-  .hero .lead, .page-heading .lead { animation-delay: 85ms; }
-  .hero .facts { animation-delay: 135ms; }
-  .project-media video, .project-media dialog[open] { animation: media-enter 230ms ease-out both; }
+  .hero > *, .page-heading > * { animation: slide-fade-in 620ms var(--enter-ease) both; }
+  .hero > :nth-child(even), .page-heading > :nth-child(even) { --enter-x: var(--from-right); }
+  .hero h1 { animation-delay: 75ms; }
+  .hero .lead, .page-heading .lead { animation-delay: 145ms; }
+  .hero .facts { animation-delay: 215ms; }
+  .project-media video, .project-media dialog[open] {
+    --enter-x: var(--from-right);
+    animation: slide-fade-in 430ms var(--enter-ease) both;
+  }
 
   @media (max-width: 53rem) {
-    .site-outline nav[data-expanded="true"] { animation: outline-enter 190ms ease-out both; }
+    .site-layout { --slide-distance: clamp(1rem, 6vw, 2.75rem); }
+    .site-outline nav[data-expanded="true"] { animation: slide-fade-in 340ms var(--enter-ease) both; }
   }
 
   @supports (animation-timeline: view()) {
-    .section > h2, .case-detail > div {
-      animation: text-enter linear both;
+    :is(.section > :is(h2, p, ul, .table-scroll), .entry, .case-list > li,
+        .case-detail > div, main > div > :is(.table-scroll, .links), .project-media) {
+      animation: slide-fade-in var(--enter-ease) backwards;
       animation-timeline: view();
-      animation-range: entry 0% cover 12%;
+      animation-range: entry 0% cover 22%;
     }
-    .project-media > :first-child:not(video) {
-      animation: media-enter linear both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 18%;
+    :is(.section > :is(p, ul, .table-scroll):nth-child(even), .entry:nth-of-type(even),
+        .case-list > li:nth-child(even), .case-detail > div:nth-child(even),
+        main > div > .links, .project-media) {
+      --enter-x: var(--from-right);
     }
+    .section > .case-list { animation: none; }
+    .case-list > li:nth-child(odd) { --enter-x: var(--from-left); }
+    main :focus-within:is(.entry, .case-list > li, .case-detail > div, .links, .project-media) { animation: none; }
   }
 }
 

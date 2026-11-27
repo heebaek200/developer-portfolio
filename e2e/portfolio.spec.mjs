@@ -26,7 +26,18 @@ test('모바일 탐색을 펼쳐 사례로 이동하고 모션 감소 설정을 
   await page.setViewportSize({ width: 390, height: 820 });
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveCSS('animation-name', 'text-enter');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCSS('animation-name', 'slide-fade-in');
+  const startFrames = await page.locator('.hero > :is(.eyebrow, h1)').evaluateAll((elements) => elements.map((element) => {
+    const [animation] = element.getAnimations();
+    animation.pause();
+    animation.currentTime = 0;
+    const style = getComputedStyle(element);
+    return { x: new DOMMatrix(style.transform).m41, opacity: Number(style.opacity) };
+  }));
+  expect(startFrames[0].x).toBeLessThan(0);
+  expect(startFrames[1].x).toBeGreaterThan(0);
+  expect(startFrames.every(({ opacity }) => opacity > 0 && opacity < 1)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(page.getByRole('heading', { level: 1 })).toHaveCSS('animation-name', 'none');
   const toggle = page.getByRole('button', { name: '포트폴리오 구성' });
