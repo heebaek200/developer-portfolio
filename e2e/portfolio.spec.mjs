@@ -4,10 +4,14 @@ test('홈에서 상세를 탐색하고 새로고침과 잘못된 ID를 처리한
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
-  await expect(page.getByRole('navigation').getByRole('link')).toHaveCount(6);
+  const outline = page.getByRole('navigation', { name: '포트폴리오 구성' });
+  await expect(outline.locator(':scope > ul > li')).toHaveCount(6);
   await expect(page.locator('.video-cover img')).toHaveJSProperty('complete', true);
-  await page.getByRole('link', { name: '다 같이 키우는 생명체' }).click();
+  const project = outline.getByRole('link', { name: '다 같이 키우는 생명체', exact: true });
+  await project.click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('다 같이 키우는 생명체');
+  await expect(project).toHaveAttribute('aria-current', 'page');
+  await expect(outline.getByRole('link', { name: 'Projects' }).locator('..')).toHaveAttribute('data-current-branch', 'true');
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('다 같이 키우는 생명체');
   await page.goBack();
@@ -16,6 +20,24 @@ test('홈에서 상세를 탐색하고 새로고침과 잘못된 ID를 처리한
   await page.getByRole('link', { name: '프로젝트 목록', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('완료 팀 프로젝트');
   expect(errors).toEqual([]);
+});
+
+test('모바일 탐색을 펼쳐 사례로 이동하고 모션 감소 설정을 지킨다', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 820 });
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCSS('animation-name', 'text-enter');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCSS('animation-name', 'none');
+  const toggle = page.getByRole('button', { name: '포트폴리오 구성' });
+  const outline = page.locator('#portfolio-outline');
+  await expect(outline).toBeHidden();
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await outline.getByRole('link', { name: '같은 스터디룸의 동시 예약 제어' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('같은 스터디룸의 동시 예약 제어');
+  await expect(outline).toBeHidden();
+  await expect(page.getByRole('main')).toBeFocused();
 });
 
 test('화면 폭별 넘침, 테마 유지, 인쇄 레이아웃을 확인한다', async ({ page }) => {

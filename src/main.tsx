@@ -1,11 +1,18 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter, Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { career, cases, credentials, profile, projects, skills, type Evidence, type Project } from './content';
 import creaturePoster from './moss-golem.png';
 import './styles.css';
 
-const menus = [['/', 'Home'], ['/career', 'Career'], ['/skills', 'Skills'], ['/projects', 'Projects'], ['/engineering', 'Engineering'], ['/about', 'About']];
+const menus = [
+  { url: '/', label: 'Home' },
+  { url: '/career', label: 'Career' },
+  { url: '/skills', label: 'Skills' },
+  { url: '/projects', label: 'Projects', children: projects.map(({ id, title }) => ({ id, title })) },
+  { url: '/engineering', label: 'Engineering', children: cases.map(({ id, title }) => ({ id, title })) },
+  { url: '/about', label: 'About' },
+];
 
 /** 저장이 제한된 브라우저에서는 시스템 테마를 초기값으로 사용한다. */
 function readTheme() {
@@ -14,6 +21,32 @@ function readTheme() {
     if (stored === 'light' || stored === 'dark') return stored;
   } catch { /* 현재 화면은 저장 권한 없이도 동작한다. */ }
   return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+/** 콘텐츠 데이터에서 탐색 계층을 만들고 현재 페이지의 경로를 강조한다. */
+function SiteOutline({ pathname }: { pathname: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const toggle = useRef<HTMLButtonElement>(null);
+
+  function close(event: MouseEvent<HTMLAnchorElement>, target: string) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    setExpanded(false);
+    if (pathname === target && toggle.current?.offsetWidth) toggle.current.focus();
+  }
+  return <aside className="site-outline">
+    <p className="outline-heading">포트폴리오 구성</p>
+    <button ref={toggle} type="button" className="outline-toggle" aria-expanded={expanded} aria-controls="portfolio-outline" onClick={() => setExpanded(!expanded)}>
+      포트폴리오 구성 <span aria-hidden="true">{expanded ? '−' : '+'}</span>
+    </button>
+    <nav id="portfolio-outline" aria-label="포트폴리오 구성" data-expanded={expanded}>
+      <ul>{menus.map(({ url, label, children }) => <li key={url} data-current-branch={pathname === url || pathname.startsWith(url + '/')}>
+        <NavLink to={url} end onClick={(event) => close(event, url)}>{label}</NavLink>
+        {children && <ul>{children.map(({ id, title }) => <li key={id}>
+          <NavLink to={url + '/' + id} end onClick={(event) => close(event, url + '/' + id)}>{title}</NavLink>
+        </li>)}</ul>}
+      </li>)}</ul>
+    </nav>
+  </aside>;
 }
 
 /** 공통 탐색과 페이지 이동 시 문서 제목 및 본문 포커스를 관리한다. */
@@ -44,24 +77,28 @@ function Layout() {
     <header className="site-header">
       <div className="header-inner">
         <Link className="brand" to="/">이희백</Link>
-        <nav aria-label="주 메뉴">{menus.map(([url, label]) => <NavLink end={url === '/'} key={url} to={url}>{label}</NavLink>)}</nav>
         <button className="quiet-button" onClick={toggleTheme}>{theme === 'dark' ? '라이트 모드' : '다크 모드'}</button>
       </div>
     </header>
-    <main id="main-content" ref={main} tabIndex={-1}>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/career" element={<Career />} />
-        <Route path="/skills" element={<Skills />} />
-        <Route path="/projects" element={<Projects />} />
-        <Route path="/projects/:projectId" element={<ProjectDetail />} />
-        <Route path="/engineering" element={<Engineering />} />
-        <Route path="/engineering/:caseId" element={<CaseDetail />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/print" element={<Print />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </main>
+    <div className="site-layout">
+      <SiteOutline pathname={pathname} />
+      <main id="main-content" ref={main} tabIndex={-1}>
+        <div key={pathname}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/career" element={<Career />} />
+            <Route path="/skills" element={<Skills />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/:projectId" element={<ProjectDetail />} />
+            <Route path="/engineering" element={<Engineering />} />
+            <Route path="/engineering/:caseId" element={<CaseDetail />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/print" element={<Print />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
+      </main>
+    </div>
     <footer className="site-footer"><span>이희백</span><Link to="/print">인쇄용 요약</Link><a href={profile.github}>GitHub</a></footer>
   </>;
 }

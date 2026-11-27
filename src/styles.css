@@ -39,23 +39,41 @@ main:focus { outline: none; }
 
 /* 탐색은 넓게 펼치고 독립적인 본문은 한 컬럼에 둔다. */
 .site-header { border-bottom: 1px solid var(--line); }
-.header-inner, .site-footer, main { width: min(100% - 3rem, 72rem); margin-inline: auto; }
+.header-inner, .site-footer, .site-layout { width: min(100% - 3rem, 76rem); margin-inline: auto; }
 .header-inner { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem 2rem; padding-block: 1.1rem; }
 .brand { color: var(--ink); font-weight: 750; text-decoration: none; }
-nav { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; }
-nav a { color: var(--muted); text-decoration: none; }
-nav a[aria-current="page"], nav a:hover { color: var(--accent); text-decoration: underline; }
 .header-inner button { margin-left: auto; }
 .quiet-button { font-size: .875rem; }
-main { max-width: 58rem; padding-block: clamp(2.25rem, 7vw, 6rem); min-height: 60vh; }
+.site-layout {
+  --page-top: clamp(2.25rem, 6vw, 5rem);
+  display: grid;
+  grid-template-columns: clamp(12.5rem, 20vw, 17rem) minmax(0, 1fr);
+  column-gap: clamp(1.75rem, 4vw, 4rem);
+}
+main { max-width: 58rem; min-width: 0; padding-block: var(--page-top); min-height: 60vh; }
 .site-footer { display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; border-top: 1px solid var(--line); padding-block: 1.1rem 2rem; }
+
+/* 목록의 들여쓰기와 연결선으로 사이트 계층을 드러낸다. */
+.site-outline { position: sticky; top: 1.25rem; align-self: start; margin-top: var(--page-top); padding-right: .65rem; max-height: calc(100dvh - 2.5rem); overflow: auto; }
+.outline-heading { margin: 0 0 .7rem; color: var(--muted); font-size: .875rem; font-weight: 700; }
+.outline-toggle { display: none; }
+.site-outline ul { list-style: none; margin: 0; padding-left: 0; }
+.site-outline li > ul { border-left: 1px solid var(--line); margin: .1rem 0 .4rem .75rem; padding-left: .65rem; }
+.site-outline a { display: block; padding: .2rem .55rem; color: var(--muted); text-decoration: none; word-break: keep-all; overflow-wrap: anywhere; }
+.site-outline nav > ul > li > a { font-weight: 650; color: var(--ink); }
+.site-outline li li > a { font-size: .875rem; }
+.site-outline a:hover { color: var(--accent); text-decoration: underline; }
+.site-outline a:focus-visible { outline-offset: -2px; }
+.site-outline [data-current-branch="true"] > a,
+.site-outline nav > ul > li > a[aria-current="page"] { color: var(--accent); }
+.site-outline a[aria-current="page"] { color: var(--accent); background: var(--surface); font-weight: 750; }
 
 /* 제목의 위계와 큰 여백으로 홈과 상세의 읽기 순서를 드러낸다. */
 h1, h2 { margin: 0; line-height: 1.25; }
 h1 { margin-block: .2em .3em; font-size: clamp(2rem, 5.2vw, 4rem); letter-spacing: -.055em; word-break: keep-all; overflow-wrap: anywhere; }
 .hero h1 { max-width: 19ch; font-family: "Nanum Myeongjo", "Batang", Georgia, serif; }
 h2 { font-size: clamp(1.3rem, 2.2vw, 1.9rem); }
-.lead { max-width: 46rem; margin-block: .7rem 0; color: var(--muted); font-size: clamp(1rem, 1.5vw, 1.2rem); }
+.lead { max-width: 46rem; margin-block: .7rem 0; color: var(--muted); font-size: clamp(1rem, 1.5vw, 1.2rem); word-break: keep-all; overflow-wrap: anywhere; text-wrap: pretty; }
 .eyebrow { color: var(--accent); font-weight: 700; margin-block: 0 .35rem; }
 .facts, .links { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; list-style: none; padding: 0; }
 .facts { color: var(--muted); margin-top: 1.75rem; }
@@ -85,16 +103,63 @@ th { font-weight: 700; }
 .video-cover img { width: min(100%, 12rem); aspect-ratio: 1; object-fit: contain; }
 figcaption { margin-top: .4rem; font-size: .875rem; }
 
-@media (max-width: 42rem) {
-  .header-inner, .site-footer, main { width: calc(100% - 2rem); }
-  .header-inner nav { order: 3; width: 100%; }
+@media (max-width: 53rem) {
+  .header-inner, .site-footer, .site-layout { width: calc(100% - 2rem); }
+  .site-layout { display: block; --page-top: 2.25rem; }
+  .site-outline { position: static; max-height: none; overflow: visible; padding: 0; margin: .85rem 0 0; }
+  .outline-heading { display: none; }
+  .outline-toggle { display: flex; align-items: center; gap: 1rem; min-height: 44px; }
+  .site-outline nav { margin-top: .65rem; }
+  .site-outline nav[data-expanded="false"] { display: none; }
+  .site-outline a { min-height: 40px; align-content: center; }
   th, td { padding-right: .45rem; overflow-wrap: anywhere; }
+}
+
+/* 제목, 소개, 근거가 읽는 순서에 맞춰 짧게 자리 잡는다. */
+@keyframes text-enter {
+  from { opacity: .55; transform: translateY(.55rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes media-enter {
+  from { opacity: .7; clip-path: inset(3% 0); }
+  to { opacity: 1; clip-path: inset(0); }
+}
+@keyframes outline-enter {
+  from { opacity: .65; transform: translateY(-.3rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media screen and (prefers-reduced-motion: no-preference) {
+  .site-outline a, button { transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease; }
+  .hero > *, .page-heading > * { animation: text-enter 360ms cubic-bezier(.2,.65,.3,1) both; }
+  .hero h1 { animation-delay: 45ms; }
+  .hero .lead, .page-heading .lead { animation-delay: 85ms; }
+  .hero .facts { animation-delay: 135ms; }
+  .project-media video, .project-media dialog[open] { animation: media-enter 230ms ease-out both; }
+
+  @media (max-width: 53rem) {
+    .site-outline nav[data-expanded="true"] { animation: outline-enter 190ms ease-out both; }
+  }
+
+  @supports (animation-timeline: view()) {
+    .section > h2, .case-detail > div {
+      animation: text-enter linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 12%;
+    }
+    .project-media > :first-child:not(video) {
+      animation: media-enter linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 18%;
+    }
+  }
 }
 
 @page { size: A4; margin: 15mm; }
 @media print {
   :root, :root[data-theme="dark"] { --paper: white; --ink: black; --muted: #252525; --accent: #252525; --line: #aaa; color-scheme: light; }
-  .site-header, .site-footer, .skip, .print-action, .project-media video, .video-cover { display: none; }
+  .site-header, .site-footer, .site-outline, .skip, .print-action, .project-media video, .video-cover { display: none; }
+  .site-layout { display: block; width: 100%; }
   main { width: 100%; max-width: none; padding: 0; }
   .page-heading, .section { margin-block: 0 .85rem; padding-top: .5rem; }
   h1 { font-size: 24pt; }
