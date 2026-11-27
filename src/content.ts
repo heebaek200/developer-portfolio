@@ -21,17 +21,11 @@ export interface Project {
   team: string;
   stack: string;
   summary: string;
-  contribution: string;
-  outcome: string;
-  caseIds: string[];
   evidence: Evidence[];
-  video?: Evidence;
-  image?: Evidence;
 }
 
 const creature = 'https://github.com/heebaek200/shared-creature-game';
 const study = 'https://github.com/heebaek200/study_room_reservation';
-const studyAssets = 'https://raw.githubusercontent.com/heebaek200/study_room_reservation/42b3d827d467a3c968c21945e8baf4eaa333a289/docs/images/';
 
 export const profile = {
   name: '이희백',
@@ -46,10 +40,6 @@ export const projects: Project[] = [
     id: 'creature', title: '다 같이 키우는 생명체', period: '2026년 11월 · 약 3.5주',
     team: '4인 팀 · 팀장 겸 개발자', stack: 'Spring Boot · MySQL · Vite · WebSocket',
     summary: '구성원들이 퀘스트를 수행하고 공동 생명체를 성장시키는 웹 서비스입니다.',
-    contribution: '팀의 공동 설계와 리뷰를 운영하고, 예약 작업 복구와 실시간 상태 동기화 설계에 참여했습니다.',
-    outcome: '팀이 그룹·퀘스트·공동 성장과 테스트 환경의 구매·환불 흐름을 구현했습니다.',
-    caseIds: ['workflow', 'contract', 'scheduler', 'websocket', 'integrity', 'qa'],
-    video: { label: '생명체 성장 단계 시연', url: 'https://heebaek200.github.io/shared-creature-game/images/demos/21-creature-growth-showcase.mp4' },
     evidence: [
       { label: '프로젝트 소스', url: creature },
       { label: '칸반 캡처', url: creature + '/blob/main/docs/images/github-projects-kanban.png' },
@@ -61,10 +51,6 @@ export const projects: Project[] = [
     id: 'study-room', title: '스터디룸 예약 관리 시스템', period: '2026.09.11–09.16',
     team: '3인 팀 · 팀장 겸 개발자', stack: 'Java 21 · JDK HttpServer · JDBC · MySQL',
     summary: '스터디룸 예약·취소와 관리자 환불 처리를 연결한 웹 서비스입니다.',
-    contribution: '팀 공동 설계와 리뷰를 진행하고, 동일 공간에서 예약이 겹치지 않도록 동시성 처리를 구현했습니다.',
-    outcome: '팀 통합 테스트에서 같은 공간·시간대의 동시 요청 8건 중 1건이 성공했습니다.',
-    caseIds: ['reservation'],
-    image: { label: '스터디룸 예약 신청 화면 · 로컬 테스트', url: studyAssets + encodeURIComponent('3스터디룸 예약 신청 화면.png') },
     evidence: [
       { label: '실행 화면 및 소스', url: study },
       { label: '통합 테스트 리포트', url: 'https://heebaek200.github.io/study_room_reservation/' },
