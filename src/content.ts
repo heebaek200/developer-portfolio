@@ -30,8 +30,8 @@ const study = 'https://github.com/heebaek200/study_room_reservation';
 export const profile = {
   name: '이희백',
   role: '풀스택 웹 개발자',
-  headline: '운영 경험을 바탕으로, 팀이 검증할 수 있게 개발합니다.',
-  introduction: '일본 IT 기업에서 6년 6개월간 웹 애플리케이션을 개발하고 유지보수했습니다. 지금은 요구사항을 명세로 정리하고, AI를 활용해 구현한 결과를 리뷰와 테스트로 검증합니다.',
+  headline: ['소프트웨어를 만들고,', '팀이 만드는 방식도 개선합니다.'],
+  introduction: '일본 IT 기업에서 6년 6개월간 업무 시스템을 개발하고 유지보수했습니다. 화면과 검증 로직을 공통화했던 경험을 바탕으로, 지금은 팀의 작업 환경부터 명세·구현·리뷰·검증이 이어지는 개발 과정까지 설계합니다.',
   github: 'https://github.com/heebaek200',
 };
 
@@ -69,26 +69,18 @@ export const cases: Case[] = [
     evidence: [{ label: '설계 문서 정리 PR #46', url: creature + '/pull/46' }],
   },
   {
-    id: 'legacy', title: '레거시 CSV 처리 프로그램 재설계', summary: '약 1만 건의 CSV 처리 시간을 약 30초에서 약 3초로 줄였습니다.',
-    outlineTitle: 'CSV 처리 시간, 약 90% 단축',
+    id: 'legacy', title: '레거시 CSV 처리 프로그램 재설계', summary: '기존 출력 요구와 입력 형식을 보존하면서 팀이 유지할 수 있는 PHP 프로그램으로 다시 구현했습니다.',
+    outlineTitle: '팀이 유지할 수 있는 CSV 처리',
     problem: '기존 프로그램은 담당자 퇴사 후 유지보수가 어려웠고, 데이터에 따라 출력 품질 문제가 발생했습니다.',
     decision: '기존 출력 요구를 확인하고 팀에서 유지보수할 수 있는 PHP로 재구현했습니다. 중복 처리와 불필요한 데이터 변환을 줄였습니다.',
     verification: 'Excel 체크리스트로 기존 동작을 수동 검증했습니다. 시간은 CSV 처리 프로그램 기준입니다.', evidence: [],
-  },
-  {
-    id: 'workflow', title: 'AI 구현을 팀이 검토할 수 있는 개발 절차', summary: '설계, 이슈, PR, 검증의 연결을 팀 작업 방식으로 정리했습니다.',
-    outlineTitle: 'AI가 짠 코드, 누가 책임져?',
-    problem: 'AI와 병렬로 작업할수록 요구사항의 최신 상태와 리뷰 대상을 놓치기 쉬웠습니다.',
-    decision: '공동 설계와 공통 기반 작업을 분리하고, 팀이 이슈·칸반·리포트에서 작업과 완료 조건을 확인하게 했습니다.',
-    verification: '공동 육성 프로젝트에는 초기화 도구와 AMALITE·SPEAR 절차를 적용했습니다. 슈타이어는 프로젝트 종료 뒤 다음 팀 프로젝트 준비 중 정립했습니다.',
-    evidence: [{ label: '프로젝트 초기화 도구', url: 'https://github.com/heebaek200/github-project-bootstrapper' }],
   },
   {
     id: 'scheduler', title: '서버 재시작을 고려한 예약 작업', summary: '프로세스가 중단돼도 처리 대상을 다시 확인할 수 있도록 설계했습니다.',
     outlineTitle: '서버가 꺼지면 작업은?',
     problem: '실행 시점을 메모리에만 의존하면 중단 중 만료된 작업을 놓칠 수 있었습니다.',
     decision: '저장된 상태를 기준으로 복구 대상을 확인하고 예약 작업과 정리 작업의 영향을 분리해 검토했습니다.',
-    verification: '관련 PR에서 복구와 경합 조건을 검토했습니다. 실제 다중 서버 운영은 검증 범위 밖입니다.',
+    verification: '스케줄러 QA에서 기동 후 복구와 중복 요청을 확인했습니다. 동시 중복 요청에서도 실제 작업은 한 번 실행됐습니다.',
     evidence: [
       { label: '재시작 정책 결정', url: creature + '/issues/24#issuecomment-6653782943' },
       { label: '스케줄러 QA 기록', url: creature + '/blob/main/docs/test-results/QA-02-rewards-scheduler.md' },
@@ -99,7 +91,7 @@ export const cases: Case[] = [
     outlineTitle: '소켓이 끊겼다. 그다음은?',
     problem: '연결이 끊긴 동안 발생한 이벤트를 클라이언트가 놓칠 수 있었습니다.',
     decision: 'REST 스냅샷으로 현재 상태를 확인하고 WebSocket 이벤트로 이후 변경을 받는 방식을 사용했습니다.',
-    verification: '팀 QA에서 연결 장애 중 REST 조회를 확인했습니다. 자동 재연결과 조회 중단은 후속 검증이 필요한 항목입니다.',
+    verification: '팀 QA에서 WebSocket 연결 장애 중 REST 조회로 현재 상태가 반영되는 동작을 확인했습니다.',
     evidence: [{ label: 'WebSocket PR #90', url: creature + '/pull/90' }, { label: '팀 QA 기록', url: creature + '/tree/main/docs/test-results' }],
   },
   {

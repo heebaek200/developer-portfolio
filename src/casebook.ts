@@ -2,6 +2,7 @@ import { cases as originalCases, type Case, type Evidence } from './content';
 
 export interface Capture {
   key: string;
+  extension?: 'png';
   label: string;
   caption: string;
   source: string;
@@ -21,7 +22,6 @@ interface Dossier {
   architecture: Diagram;
   features: string[][];
   roles: string[][];
-  management: string;
   captures: Capture[];
   records: Capture[];
   qa: string[][];
@@ -62,7 +62,6 @@ export const dossiers: Record<string, Dossier> = {
       ['팀 · 구현 성과', '그룹·퀘스트·성장, 사진 인증, 아바타, 테스트 결제·환불과 QA'],
       ['팀원 · 담당 사례', '아바타 렌더링 방식 선택, 공통 헤더 시즌 타이머 갱신, 부화 전 퀘스트 완료 오류 대응, 환불 구현'],
     ],
-    management: '업무 규칙을 설계 문서에서 확인하고 이슈의 완료 조건을 PR 리뷰와 QA로 연결했습니다. 작업 보드는 업무 상태를, 일일 리포트는 진행과 중단 지점을 공유하는 데 썼습니다.',
     captures: [
       { key: 'creature-join', label: '공개 그룹 가입', caption: '참여할 그룹을 선택하고 가입하는 흐름', source: creatureRef + 'images/demos/02-group-join.gif', motion: true },
       { key: 'creature-checkin', label: '퀘스트 체크인', caption: '일상 실천을 퀘스트 완료로 기록', source: creatureRef + 'images/demos/05-quest-checkin.gif', motion: true },
@@ -77,7 +76,7 @@ export const dossiers: Record<string, Dossier> = {
       ['그룹 경쟁', '동시 가입에서 정원과 단일 활성 소속 검사', 'MySQL 통합 테스트 기록'],
       ['보상과 스케줄러', '기본 보상 4건 통과, 중복 실행에서 실제 작업 1회', 'QA-02'],
       ['결제·환불', '테스트 PG 기본 5건 통과', 'QA-03'],
-      ['실시간 동기화', '장애 중 REST 조회 확인. 자동 재연결·폴링 중단은 후속 검증 범위', 'QA-04'],
+      ['실시간 동기화', '연결 장애 중 REST 조회로 현재 상태 반영 확인', 'QA-04'],
     ],
     qaLinks: [
       { label: '가입 QA-01', url: creatureRef + 'test-results/QA-01-auth-group.md' },
@@ -86,7 +85,7 @@ export const dossiers: Record<string, Dossier> = {
       { label: 'WebSocket QA-04', url: creatureRef + 'test-results/QA-04-websocket.md' },
       { label: '팀 발표 자료', url: 'https://heebaek200.github.io/shared-creature-game/presentation.html' },
     ],
-    reflection: '시연에서는 성장과 권한 차이가 더 직접적으로 보일 필요가 있었습니다. 기술적으로는 리뷰 역할 분산과 자동 재연결 재검증, 제품 측면에서는 완전체 이후에도 참여를 지속할 동기가 후속 과제입니다.',
+    reflection: '발표의 후속 방향으로 크리처 성장과 권한 차이를 더 직접적으로 보여주는 시연을 정리했습니다. 팀 운영에서는 리뷰 역할 분산을, 제품에서는 완전체 이후의 참여 동기를 개선 방향으로 잡았습니다.',
     featuredCase: 'scheduler',
   },
   'study-room': {
@@ -111,14 +110,15 @@ export const dossiers: Record<string, Dossier> = {
       ['개인 · 개발 및 검증', '인증, 예약 동시성, 관리자·회원 환불 흐름에 참여하고 통합 테스트 리포트를 게시'],
       ['팀 · 구현 성과', '회원과 관리자 업무를 연결하고, 같은 공간에 겹치는 예약 요청을 제어했습니다. 환불 관리는 서비스 내부 처리입니다.'],
     ],
-    management: '공동 설계를 Wiki와 이슈에 정리하고, 기능별 PR과 교차 테스트로 연결했습니다. 동시성 테스트 작성에는 LLM을 활용했고 결과 리포트를 게시했습니다.',
     captures: [
       { key: 'study-login', label: '회원 로그인', caption: '테스트 계정 입력과 회원가입 이동', source: studyRef + encodeURIComponent('1로그인 화면.png') },
       { key: 'study-rooms', label: '스터디룸 목록', caption: '수용 인원과 시간당 이용료 비교', source: studyRef + encodeURIComponent('2스터디룸 목록 화면.png') },
       { key: 'study-reservation', label: '예약 신청', caption: '공간을 확인하고 시작·종료 시간을 입력', source: studyRef + encodeURIComponent('3스터디룸 예약 신청 화면.png') },
       { key: 'study-admin', label: '관리자 홈', caption: '공간·회원·예약·환불 관리 진입점', source: studyRef + encodeURIComponent('4관리자 화면.png') },
     ],
-    records: [],
+    records: [
+      { key: 'study-roadmap', extension: 'png', label: '스터디룸 GitHub Projects 로드맵', caption: '인증, 예약 동시성, 환불, 공통 라우팅과 화면 작업을 이슈·담당·일정으로 추적한 실제 로드맵', source: 'https://github.com/users/heebaek200/projects/5' },
+    ],
     qa: [
       ['같은 방·겹치는 시간', '동시 요청 8건 중 1건 성공', '통과'],
       ['같은 방·맞닿은 시간', '끝 시각과 다음 시작 시각이 같은 요청 허용', '통과'],
@@ -129,7 +129,7 @@ export const dossiers: Record<string, Dossier> = {
       { label: '교차 테스트 이슈 #12', url: study + '/issues/12' },
       { label: '프로젝트 보드', url: 'https://github.com/users/heebaek200/projects/5' },
     ],
-    reflection: '저장된 예약 생성 테스트 결과는 세 건입니다. 테스트 Java 원본은 현재 저장소에 보존돼 있지 않아 이 리포트로 확인할 수 있는 범위를 표시했습니다. 향후 테스트 코드와 자동 실행 환경까지 함께 보존할 수 있습니다.',
+    reflection: '예약 생성 통합 테스트에서는 요청이 겹치는 경우와 허용해야 할 경계를 함께 다뤘습니다. Gradle 리포트를 공유해 팀이 세 시나리오의 동작을 다시 살펴볼 수 있게 했습니다.',
     featuredCase: 'reservation',
   },
 };
@@ -170,7 +170,7 @@ const extraCases: AdditionalCase[] = [
     summary: '실패 항목이 후속 정리를 계속 밀어내는 위험을 다뤘습니다.',
     problem: '재시도 항목을 앞에서 계속 처리하면 삭제가 실패하는 사진이 다른 정리를 지연시킬 수 있었습니다.',
     decision: '재시도와 신규 처리 기회를 나누고, 대상의 실행권과 만료를 확인했습니다. 파일 I/O를 DB 트랜잭션 밖에서 처리하고 결과 확정 전에 소유권을 다시 확인했습니다.',
-    verification: 'PR의 선택 테스트 보고에서 사진 61건과 Scheduler 회귀 33건 통과가 확인됐습니다. 앞선 전체 실행 이후 전체 재실행 성공 기록은 확인되지 않습니다.',
+    verification: 'PR에 기록한 선택 테스트에서 사진 정리 61건과 스케줄러 회귀 33건이 통과했습니다.',
     role: '스케줄러·파일 정리 경합 설계 및 검증',
     diagram: { title: '삭제 한 건의 실행권과 실패 경로', kind: 'timeline', columns: [
       { label: '실행권 확보', steps: ['만료된 실행권 또는 처리 가능한 항목 선별'] },
@@ -184,7 +184,7 @@ const extraCases: AdditionalCase[] = [
     summary: '환불을 처리하기 전에 요청 행을 잠그고 현재 상태를 확인했습니다.',
     problem: '동일한 환불 요청을 관리자가 동시에 처리하면 이전 상태를 기준으로 결과가 덮일 수 있었습니다.',
     decision: '관리자 권한을 검사한 뒤 한 트랜잭션에서 환불 행을 잠그고, 요청 상태에서만 승인 또는 거절을 허용했습니다.',
-    verification: '서비스 코드와 관련 PR을 근거로 정리했습니다. 저장된 예약 생성 통합 리포트는 환불 검증 결과에 포함되지 않습니다.',
+    verification: '관리자 환불 PR에서 요청 상태에만 전이를 허용하고, 한 건의 변경을 확인한 뒤 커밋하는 흐름을 코드로 확인할 수 있습니다.',
     role: '관리자 및 회원 환불 업무 구현 참여',
     diagram: { title: '관리자 환불 상태의 전이', kind: 'timeline', columns: [
       { label: '처리 요청', steps: ['관리자 권한 확인'] },
@@ -198,7 +198,7 @@ const extraCases: AdditionalCase[] = [
     summary: '일반 회원의 데이터 소유권과 관리자 권한을 서버에서 확인했습니다.',
     problem: '화면 상태에만 의존하면 회원과 관리자의 데이터 경계가 요청 처리에 전달되지 않습니다.',
     decision: '세션으로 사용자를 확인하고, 회원은 자신의 예약·환불에 접근하는지 검증했습니다. 관리자 처리는 별도로 역할을 확인합니다.',
-    verification: '서비스 코드와 환불 PR을 검토했습니다. 전체 권한 경로를 재실행한 테스트 결과는 포함하지 않습니다.',
+    verification: '회원 환불 PR에 회원의 데이터 소유권 확인과 환불 요청 처리 흐름이 기록돼 있습니다.',
     role: '회원 인증 및 환불 기능 개발 참여',
     diagram: { title: '역할이 다른 두 요청의 검사 기준', kind: 'comparison', columns: [
       { label: '일반 회원', steps: ['로그인 세션 확인', '본인 데이터인지 확인한 뒤 처리'] },
