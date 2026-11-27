@@ -45,10 +45,12 @@ test('모바일 탐색을 펼쳐 사례로 이동하고 모션 감소 설정을 
   await expect(outline).toBeHidden();
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  await outline.getByRole('link', { name: '같은 스터디룸의 동시 예약 제어' }).click();
+  await outline.getByRole('link', { name: '동시 예약 8건, 성공 1건' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('같은 스터디룸의 동시 예약 제어');
   await expect(outline).toBeHidden();
   await expect(page.getByRole('main')).toBeFocused();
+  await page.getByRole('link', { name: '사례 목록' }).click();
+  await expect(page.getByRole('main').getByRole('link', { name: '같은 스터디룸의 동시 예약 제어' })).toBeVisible();
 });
 
 test('화면 폭별 넘침, 테마 유지, 인쇄 레이아웃을 확인한다', async ({ page }) => {

@@ -10,7 +10,7 @@ const menus = [
   { url: '/career', label: 'Career' },
   { url: '/skills', label: 'Skills' },
   { url: '/projects', label: 'Projects', children: projects.map(({ id, title }) => ({ id, title })) },
-  { url: '/engineering', label: 'Engineering', children: cases.map(({ id, title }) => ({ id, title })) },
+  { url: '/engineering', label: 'Engineering', children: cases.map(({ id, outlineTitle }) => ({ id, title: outlineTitle })) },
   { url: '/about', label: 'About' },
 ];
 
