@@ -10,13 +10,9 @@ test('프로젝트·사례 ID는 고유하고 상세 경로에 사용할 수 있
   }
 });
 
-test('관련 사례 참조가 유효하고 외부 근거는 HTTPS를 사용한다', () => {
-  const caseIds = new Set(cases.map(({ id }) => id));
-  for (const project of projects) {
-    for (const id of project.caseIds) assert.ok(caseIds.has(id), id);
-  }
+test('공개 근거는 HTTPS와 설명을 사용한다', () => {
   for (const entry of [...projects, ...cases]) {
-    for (const item of [...entry.evidence, entry.image, entry.video].filter(Boolean)) {
+    for (const item of entry.evidence) {
       assert.equal(new URL(item.url).protocol, 'https:');
       assert.ok(item.label.trim());
     }

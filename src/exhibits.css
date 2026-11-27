@@ -1,0 +1,128 @@
+/* 프로젝트의 색감과 실제 캡처로 사례집의 진입점을 만든다. */
+.project-exhibits { display: grid; gap: clamp(1.5rem, 3vw, 2.7rem); margin-block: 1.6rem 0; }
+.project-teaser {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.15fr);
+  align-items: center;
+  overflow: hidden;
+  min-width: 0;
+  background: #173832;
+  color: #fff8e7;
+  border-radius: .65rem;
+}
+.project-teaser.project-study-room { background: #183549; }
+.teaser-copy { padding: clamp(1.25rem, 3vw, 2.8rem); word-break: keep-all; overflow-wrap: anywhere; }
+.project-teaser .eyebrow, .teaser-stack { color: #d1ded4; font-size: .875rem; }
+.project-teaser a { color: inherit; text-decoration-thickness: .07em; }
+.project-teaser a:focus-visible { outline-color: #fff8e7; }
+.project-teaser p { margin-block: .5rem; }
+.project-teaser > img { display: block; width: 100%; height: 100%; min-height: 16rem; max-height: 26rem; object-fit: cover; object-position: top center; }
+
+/* 페이지 안에서 읽는 순서를 선택하고 증빙을 직접 탐색한다. */
+.project-facts, .section-jump { display: flex; flex-wrap: wrap; gap: .65rem 1rem; list-style: none; padding: 0; }
+.project-facts { color: var(--muted); margin-bottom: 1.8rem; font-size: .92rem; }
+.project-facts li { border-inline-start: 2px solid var(--line); padding-inline-start: .7rem; }
+.section-jump { margin-block: 1rem; }
+.section-jump > :is(button, a) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: .45rem .75rem;
+  border: 1px solid var(--line);
+  border-radius: .35rem;
+  background: transparent;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: .875rem;
+}
+.section-jump > :is(button, a):hover, .section-jump a[aria-current] { background: var(--surface); }
+.section h2[id] { scroll-margin-top: 1.5rem; }
+.breadcrumb { margin-block: 0 1rem; color: var(--muted); }
+.featured-decision { margin-block: 1.6rem; border-inline-start: 3px solid var(--accent); padding-inline-start: 1rem; }
+.featured-decision h3 { margin: .4rem 0; font-size: 1.35rem; }
+.runtime-chart > div { display: grid; grid-template-columns: 8rem minmax(0, 1fr); align-items: center; gap: .75rem; margin-block: .65rem; }
+.runtime-chart meter { width: 100%; height: 1.5rem; accent-color: var(--accent); }
+
+/* 기능 캡처는 본문에, 영상 디코딩과 원본 크기 이미지는 열었을 때만 사용한다. */
+.exhibit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.65rem 1.15rem; margin-block: 1.5rem; }
+.exhibit, .growth-film { min-width: 0; margin: 0; }
+.exhibit-trigger, .film-trigger {
+  display: grid;
+  justify-items: start;
+  gap: .65rem;
+  width: 100%;
+  padding: .55rem;
+  border: 1px solid var(--line);
+  border-radius: .45rem;
+  text-align: start;
+  background: var(--surface);
+}
+.exhibit-trigger img, .film-trigger img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: contain; background: var(--paper); }
+.exhibit-trigger:hover, .film-trigger:hover { border-color: var(--accent); }
+.exhibit-action, .film-trigger span { padding: .1rem .4rem; color: var(--accent); font-weight: 700; font-size: .875rem; }
+.exhibit figcaption { padding-inline: .2rem; }
+.exhibit figcaption strong { display: block; color: var(--ink); }
+.exhibit figcaption span { margin-inline-end: .35rem; }
+.exhibit-unavailable { display: grid; place-items: center; min-height: 8rem; background: var(--surface); }
+.growth-film { margin-block: 2.2rem 0; }
+.film-trigger { max-width: 47rem; }
+.film-trigger img { aspect-ratio: 16 / 8; object-fit: cover; object-position: center; }
+.growth-film > video { display: block; width: 100%; max-height: 34rem; background: #172823; }
+.exhibit-dialog { max-width: min(94vw, 66rem); max-height: 92dvh; border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: .5rem; }
+.exhibit-dialog::backdrop { background: rgb(10 19 18 / 72%); }
+.exhibit-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
+.exhibit-dialog :is(img, video) { display: block; max-width: 100%; max-height: 74dvh; width: auto; margin-inline: auto; }
+
+/* 비교는 나란히, 시퀀스는 차례가 맞는 두 요청 열로 표현한다. */
+.decision-diagram, .runtime-chart { margin: 1.6rem 0; padding: clamp(.8rem, 2vw, 1.3rem); border: 1px solid var(--line); border-radius: .45rem; background: var(--surface); }
+.decision-diagram figcaption, .runtime-chart figcaption { color: var(--ink); font-size: 1rem; font-weight: 750; margin: 0 0 .9rem; }
+.decision-columns { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: .65rem; padding: 0; margin: 0; list-style: none; }
+.decision-columns > li { border-top: 3px solid var(--accent); background: var(--paper); padding: .6rem .7rem; overflow-wrap: anywhere; }
+.decision-columns ol { padding-inline-start: 1.3rem; margin: .3rem 0 0; }
+.decision-columns ol > li + li { margin-top: .35rem; }
+.sequence-table { counter-reset: sequence; border-collapse: separate; border-spacing: .55rem .35rem; }
+.sequence-table :is(th, td) { width: 50%; }
+.sequence-table th { color: var(--accent); }
+.sequence-table td { background: var(--paper); border: 0; padding: .65rem; border-radius: .3rem; }
+.sequence-table tbody tr { counter-increment: sequence; }
+.sequence-table tbody td:first-child::before { content: counter(sequence, decimal-leading-zero) " "; font-variant-numeric: tabular-nums; color: var(--accent); padding-inline-end: .35rem; }
+.sequence-table tbody tr:last-child td:last-child { font-weight: 750; }
+
+@media (min-width: 43.01rem) {
+  .decision-diagram[data-kind="timeline"] .decision-columns { gap: 1.15rem; }
+  .decision-diagram[data-kind="timeline"] .decision-columns > li { position: relative; }
+  .decision-diagram[data-kind="timeline"] .decision-columns > li + li::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: -.85rem;
+    top: 1.1rem;
+    width: .45rem;
+    height: .45rem;
+    border: solid var(--accent);
+    border-width: 2px 2px 0 0;
+    transform: rotate(45deg);
+  }
+}
+
+@media (max-width: 43rem) {
+  .project-teaser, .exhibit-grid { grid-template-columns: minmax(0, 1fr); }
+  .project-teaser > img { min-height: 0; max-height: 19rem; }
+  .decision-columns { grid-auto-flow: row; grid-auto-columns: auto; }
+}
+
+@media screen and (prefers-reduced-motion: no-preference) {
+  .growth-film video, .exhibit-dialog[open] { animation: slide-fade-in 420ms cubic-bezier(.18,.72,.26,1) both; --enter-x: 1.8rem; }
+  @supports (animation-timeline: view()) {
+    main :is(.project-teaser, .exhibit, .decision-diagram):not(:focus-within) {
+      animation: slide-fade-in var(--enter-ease) backwards;
+      animation-timeline: view();
+      animation-range: entry 0% cover 20%;
+    }
+    :is(.project-teaser, .exhibit):nth-child(even), .decision-diagram { --enter-x: var(--from-right); }
+  }
+}
+
+@media print {
+  .section-jump, .exhibit-action, .exhibit-dialog, .growth-film video { display: none; }
+  .exhibit, .decision-diagram, .runtime-chart { break-inside: avoid; }
+}

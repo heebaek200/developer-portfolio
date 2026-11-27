@@ -1,18 +1,30 @@
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { HashRouter, Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
-import { career, cases, credentials, profile, projects, skills, type Evidence, type Project } from './content';
-import creaturePoster from './moss-golem.png';
+import { HashRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
+import { career, credentials, profile, projects, skills, type Case, type Evidence, type Project } from './content';
+import { dossiers, getProjectCases } from './casebook';
+import { experiences } from './experiences';
+import { DecisionDiagram, Gallery, GrowthFilm, mediaPath } from './exhibits';
 import './styles.css';
 
-const menus = [
+interface OutlineItem { url: string; label: string; children?: OutlineItem[] }
+
+const menus: OutlineItem[] = [
   { url: '/', label: 'Home' },
   { url: '/career', label: 'Career' },
   { url: '/skills', label: 'Skills' },
-  { url: '/projects', label: 'Projects', children: projects.map(({ id, title }) => ({ id, title })) },
-  { url: '/engineering', label: 'Engineering', children: cases.map(({ id, outlineTitle }) => ({ id, title: outlineTitle })) },
+  { url: '/projects', label: 'Projects', children: projects.map(({ id, title }) => ({
+    url: '/projects/' + id, label: title,
+    children: getProjectCases(id).map((item) => ({ url: casePath(id, item.id), label: item.outlineTitle })),
+  })) },
+  { url: '/experiences', label: 'Experiences', children: experiences.map(({ id, title }) => ({ url: '/experiences?area=' + id, label: title })) },
   { url: '/about', label: 'About' },
 ];
+
+/** 사례의 소속과 안정적인 상세 주소를 함께 결정한다. */
+function casePath(projectId: string, caseId: string) {
+  return '/projects/' + projectId + '/cases/' + caseId;
+}
 
 /** 저장이 제한된 브라우저에서는 시스템 테마를 초기값으로 사용한다. */
 function readTheme() {
@@ -26,12 +38,26 @@ function readTheme() {
 /** 콘텐츠 데이터에서 탐색 계층을 만들고 현재 페이지의 경로를 강조한다. */
 function SiteOutline({ pathname }: { pathname: string }) {
   const [expanded, setExpanded] = useState(false);
+  const { search } = useLocation();
   const toggle = useRef<HTMLButtonElement>(null);
 
   function close(event: MouseEvent<HTMLAnchorElement>, target: string) {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     setExpanded(false);
-    if (pathname === target && toggle.current?.offsetWidth) toggle.current.focus();
+    if (target.split('?')[0] === pathname && toggle.current?.offsetWidth) toggle.current.focus();
+  }
+
+  function renderOutline(items: OutlineItem[], depth = 0): ReactNode {
+    return <ul>{items.map(({ url, label, children }) => {
+      const queryLink = url.includes('?');
+      const active = queryLink ? pathname + search === url : pathname === url || pathname.startsWith(url + '/');
+      return <li key={url} data-current-branch={active}>
+        {queryLink || (url === '/experiences' && search)
+          ? <Link to={url} aria-current={queryLink && active ? 'page' : undefined} onClick={(event) => close(event, url)}>{label}</Link>
+          : <NavLink to={url} end onClick={(event) => close(event, url)}>{label}</NavLink>}
+        {children && (depth === 0 || active) && renderOutline(children, depth + 1)}
+      </li>;
+    })}</ul>;
   }
   return <aside className="site-outline">
     <p className="outline-heading">포트폴리오 구성</p>
@@ -39,12 +65,7 @@ function SiteOutline({ pathname }: { pathname: string }) {
       포트폴리오 구성 <span aria-hidden="true">{expanded ? '−' : '+'}</span>
     </button>
     <nav id="portfolio-outline" aria-label="포트폴리오 구성" data-expanded={expanded}>
-      <ul>{menus.map(({ url, label, children }) => <li key={url} data-current-branch={pathname === url || pathname.startsWith(url + '/')}>
-        <NavLink to={url} end onClick={(event) => close(event, url)}>{label}</NavLink>
-        {children && <ul>{children.map(({ id, title }) => <li key={id}>
-          <NavLink to={url + '/' + id} end onClick={(event) => close(event, url + '/' + id)}>{title}</NavLink>
-        </li>)}</ul>}
-      </li>)}</ul>
+      {renderOutline(menus)}
     </nav>
   </aside>;
 }
@@ -84,8 +105,11 @@ function Layout() {
             <Route path="/skills" element={<Skills />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:projectId" element={<ProjectDetail />} />
-            <Route path="/engineering" element={<Engineering />} />
-            <Route path="/engineering/:caseId" element={<CaseDetail />} />
+            <Route path="/projects/:projectId/cases/:caseId" element={<ProjectCaseDetail />} />
+            <Route path="/experiences" element={<ExperienceIndex />} />
+            <Route path="/experiences/:caseId" element={<ExperienceDetail />} />
+            <Route path="/engineering" element={<Navigate replace to="/experiences" />} />
+            <Route path="/engineering/:caseId" element={<LegacyCase />} />
             <Route path="/about" element={<About />} />
             <Route path="/print" element={<Print />} />
             <Route path="*" element={<NotFound />} />
@@ -112,40 +136,8 @@ function EvidenceLinks({ items }: { items: Evidence[] }) {
   return !!items.length && <ul className="links">{items.map((item) => <li key={item.url}><a href={item.url}>{item.label}</a></li>)}</ul>;
 }
 
-/** 해당 미디어의 실패 상태를 개별적으로 처리하며 원본 경로를 제공한다. */
-function ProjectMedia({ project }: { project: Project }) {
-  const [failed, setFailed] = useState(false);
-  const [playing, setPlaying] = useState(false);
-  const dialog = useRef<HTMLDialogElement>(null);
-  const imageTrigger = useRef<HTMLButtonElement>(null);
-  const media = project.video ?? project.image;
-  if (!media) return null;
-  return <figure className="project-media">
-    {failed ? <p role="status">미디어를 불러오지 못했습니다.</p> : project.video
-      ? playing
-        ? <video controls playsInline preload="metadata" aria-label={media.label} src={media.url} onError={() => setFailed(true)} />
-        : <div className="video-cover">
-          <img src={creaturePoster} alt="" width={250} height={250} loading="lazy" />
-          <span>{media.label}</span>
-          <button type="button" onClick={() => setPlaying(true)}>영상 열기</button>
-        </div>
-      : <>
-        <button type="button" className="image-trigger" ref={imageTrigger} onClick={() => dialog.current?.showModal()}>
-          <img loading="lazy" decoding="async" src={media.url} alt={media.label} onError={() => setFailed(true)} />
-          <span>이미지 확대</span>
-        </button>
-        <dialog ref={dialog} aria-label={media.label} onClose={() => imageTrigger.current?.focus()}>
-          <form method="dialog"><button>닫기</button></form>
-          <img loading="lazy" src={media.url} alt={media.label} />
-        </dialog>
-      </>}
-    <figcaption>{media.label} · <a href={media.url}>원본 보기</a></figcaption>
-  </figure>;
-}
-
-/** 홈에 경력 소개와 대표 프로젝트·기술 판단을 연결한다. */
+/** 홈에서 실제 화면과 함께 두 프로젝트의 상세 사례집을 소개한다. */
 function Home() {
-  const featured = projects.find((project) => project.id === 'creature');
   return <>
     <header className="hero">
       <p className="eyebrow">{profile.role}</p>
@@ -153,15 +145,28 @@ function Home() {
       <p className="lead">{profile.introduction}</p>
       <ul className="facts"><li>개발 실무 6년 6개월</li><li>완료 팀 프로젝트 {projects.length}개</li><li>JLPT N1 · 2021년 취득</li></ul>
     </header>
-    {featured && <section className="section">
-      <p className="eyebrow">대표 프로젝트</p>
-      <h2><Link to={'/projects/' + featured.id}>{featured.title}</Link></h2>
-      <p>{featured.summary}</p>
-      <ProjectMedia project={featured} />
-      <p><Link to="/projects">완료 프로젝트 모두 보기</Link></p>
-    </section>}
-    <section className="section"><h2>대표 엔지니어링 사례</h2><CaseList ids={['legacy', 'workflow', 'scheduler']} /></section>
+    <section className="section"><h2>프로젝트 사례집</h2>
+      <div className="project-exhibits">{projects.map((project) => <ProjectTeaser key={project.id} project={project} />)}</div>
+    </section>
+    <section className="section"><h2>프로젝트 밖의 경험</h2>
+      <ul className="case-list">{experiences.map((area) => <li key={area.id}><Link to={'/experiences?area=' + area.id}>{area.title}</Link><p>{area.summary}</p></li>)}</ul>
+    </section>
   </>;
+}
+
+/** 실제 캡처, 서비스 요약, 역할을 한 프로젝트 소개 안에서 연결한다. */
+function ProjectTeaser({ project }: { project: Project }) {
+  const dossier = dossiers[project.id];
+  const cover = dossier.captures[2];
+  return <article className={'project-teaser project-' + project.id}>
+    <div className="teaser-copy">
+      <p className="eyebrow">{project.team}</p>
+      <h2><Link to={'/projects/' + project.id}>{project.title}</Link></h2>
+      <p>{dossier.strap}</p>
+      <p className="teaser-stack">{project.stack}</p>
+    </div>
+    <img loading="lazy" src={mediaPath(project.id === 'creature' ? 'creature-showcase' : cover.key)} alt={cover.label + ' 시연 화면'} />
+  </article>;
 }
 
 /** 역할과 업무의 차이가 드러나도록 경력과 기술을 표로 정리한다. */
@@ -176,7 +181,7 @@ function DataTable({ headings, rows }: { headings: string[]; rows: string[][] })
 function Career() {
   return <Page title="개발과 사용자 경험을 함께 쌓아온 경력">
     <DataTable headings={['기간', '역할', '업무']} rows={career} />
-    <section className="section"><h2>실무에서 개선한 일</h2><CaseList ids={['legacy']} />
+    <section className="section"><h2>실무에서 개선한 일</h2><p><Link to="/experiences/legacy">레거시 CSV 처리 프로그램 재설계</Link></p>
       <DataTable headings={['사례', '업무']} rows={[
         ['메타데이터 기반 공통 코어', 'DB의 메타 정의를 서버 검증과 화면 필드가 참조하도록 구성했습니다.'],
         ['사내 도시락 신청 자동화', '신청·취소 화면, 집계와 전달 흐름을 연결했습니다.'],
@@ -200,48 +205,154 @@ function Skills() {
 
 /** 완료 프로젝트 목록을 상세 경로와 연결한다. */
 function Projects() {
-  return <Page title="완료 팀 프로젝트">{projects.map((project) => <article className="entry" key={project.id}>
-    <h2><Link to={'/projects/' + project.id}>{project.title}</Link></h2>
-    <p className="meta">{project.period} · {project.team}</p><p>{project.summary}</p>
-  </article>)}</Page>;
+  return <Page title="완료 팀 프로젝트" lead="실제 화면에서 시작해, 설계 결정과 검증 범위까지 이어지는 두 프로젝트의 사례집입니다.">
+    <div className="project-exhibits">{projects.map((project) => <ProjectTeaser key={project.id} project={project} />)}</div>
+  </Page>;
 }
 
-/** 상세 페이지에서 팀 성과, 개인 역할, 시연과 기술 사례를 연결한다. */
+const projectSections = [
+  ['purpose', '기획과 서비스'],
+  ['screens', '실제 기능 화면'],
+  ['team', '역할과 협업'],
+  ['decisions', '기술적 판단'],
+  ['verification', '검증과 회고'],
+];
+
+/** 동일한 본문 안에서 각 섹션을 스크롤하고 키보드 포커스를 옮긴다. */
+function ProjectSections() {
+  return <nav className="section-jump" aria-label="프로젝트 페이지 목차">
+    {projectSections.map(([id, label]) => <button type="button" key={id} onClick={() => {
+      const heading = document.getElementById(id);
+      heading?.focus({ preventScroll: true });
+      heading?.scrollIntoView({ block: 'start' });
+    }}>{label}</button>)}
+  </nav>;
+}
+
+/** 프로젝트 서사 속에 기능 화면, 기여, 기술 도식, 검증을 배치한다. */
 function ProjectDetail() {
   const { projectId } = useParams();
   const project = projects.find((item) => item.id === projectId);
   if (!project) return <NotFound recovery="/projects" label="프로젝트 목록" />;
-  return <Page title={project.title} lead={project.summary}>
-    <p className="meta">{project.period} · {project.team}</p><p>{project.stack}</p>
-    <ProjectMedia key={project.id} project={project} />
-    <section className="section"><h2>역할과 팀 성과</h2><DataTable headings={['구분', '내용']} rows={[[ '내 역할', project.contribution ], [ '팀 성과', project.outcome ]]} /><EvidenceLinks items={project.evidence} /></section>
-    <section className="section"><h2>관련 기술 사례</h2><CaseList ids={project.caseIds} /></section>
+  const dossier = dossiers[project.id];
+  const projectCases = getProjectCases(project.id);
+  const featured = projectCases.find((item) => item.id === dossier.featuredCase);
+  return <Page title={project.title} lead={dossier.strap}>
+    <ul className="project-facts"><li>{project.period}</li><li>{project.team}</li><li>{project.stack}</li></ul>
+    <ProjectSections />
+    {project.id === 'creature' && <GrowthFilm />}
+    <section className="section">
+      <h2 id="purpose" tabIndex={-1}>기획과 서비스</h2>
+      {dossier.background.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+      <DecisionDiagram diagram={{ title: '사용자가 기능을 이용하는 흐름', kind: 'timeline', columns: dossier.flow.map((label, index) => ({ label: String(index + 1), steps: [label] })) }} />
+      <DataTable headings={['기능', '서비스에서의 역할']} rows={dossier.features} />
+      <DecisionDiagram diagram={dossier.architecture} />
+    </section>
+    <section className="section">
+      <h2 id="screens" tabIndex={-1}>실제 기능 화면</h2>
+      <p className="meta">테스트 환경의 실제 UI입니다. 시연에는 테스트 계정과 예시 데이터가 사용됐습니다.</p>
+      <Gallery items={dossier.captures} />
+    </section>
+    <section className="section">
+      <h2 id="team" tabIndex={-1}>역할과 팀 성과</h2>
+      <DataTable headings={['구분', '기여와 결과']} rows={dossier.roles} />
+      <p>{dossier.management}</p>
+      {!!dossier.records.length && <Gallery items={dossier.records} kind="records" />}
+      <EvidenceLinks items={project.evidence} />
+    </section>
+    <section className="section">
+      <h2 id="decisions" tabIndex={-1}>기술적 판단과 트러블슈팅</h2>
+      {featured && <article className="featured-decision">
+        <h3><Link to={casePath(project.id, featured.id)}>{featured.title}</Link></h3>
+        <p>{featured.problem}</p>
+        <DecisionDiagram diagram={featured.diagram} />
+        <p>{featured.verification}</p>
+      </article>}
+      <CaseList items={projectCases} href={(item) => casePath(project.id, item.id)} />
+    </section>
+    <section className="section">
+      <h2 id="verification" tabIndex={-1}>검증과 회고</h2>
+      <DataTable headings={['검증 범위', '기록된 결과', '근거']} rows={dossier.qa} />
+      <EvidenceLinks items={dossier.qaLinks} />
+      <p>{dossier.reflection}</p>
+    </section>
     <Link to="/projects">프로젝트 목록</Link>
   </Page>;
 }
 
-/** 전달받은 순서의 사례를 요약하고 상세 페이지에 연결한다. */
-function CaseList({ ids = cases.map((item) => item.id) }: { ids?: string[] }) {
-  return <ul className="case-list">{ids.map((id) => {
-    const item = cases.find((candidate) => candidate.id === id);
-    return item && <li key={id}><Link to={'/engineering/' + id}>{item.title}</Link><p>{item.summary}</p></li>;
-  })}</ul>;
+/** 사례의 전체 제목을 표시하고 해당 영역 아래의 상세 주소로 이동한다. */
+function CaseList({ items, href }: { items: Case[]; href: (item: Case) => string }) {
+  return <ul className="case-list">{items.map((item) => <li key={item.id}>
+    <Link to={href(item)}>{item.title}</Link><p>{item.summary}</p>
+  </li>)}</ul>;
 }
 
-/** 엔지니어링 사례 목록을 제공한다. */
-function Engineering() {
-  return <Page title="엔지니어링 사례" lead="실무 개선과 팀 프로젝트에서 내린 기술적 판단, 그리고 검증 결과를 정리했습니다."><CaseList /></Page>;
-}
-
-/** 사례별 문제, 판단, 검증 근거를 하나의 흐름으로 제시한다. */
-function CaseDetail() {
-  const { caseId } = useParams();
-  const item = cases.find((candidate) => candidate.id === caseId);
-  if (!item) return <NotFound recovery="/engineering" label="사례 목록" />;
-  return <Page title={item.title} lead={item.summary}>
-    <dl className="case-detail">{[['문제', item.problem], ['판단', item.decision], ['검증', item.verification]].map(([label, text]) => <div key={label}><dt>{label}</dt><dd>{text}</dd></div>)}</dl>
-    <EvidenceLinks items={item.evidence} /><Link to="/engineering">사례 목록</Link>
+/** 현업 개발, 개발 생산성, 제품·데이터 경험을 프로젝트와 별도로 탐색한다. */
+function ExperienceIndex() {
+  const { search } = useLocation();
+  const activeArea = new URLSearchParams(search).get('area');
+  const selected = experiences.find((area) => area.id === activeArea);
+  return <Page title="경험 사례집" lead="현업 개발, 팀 개발 생산성, 콘텐츠 운영과 데이터 활용 경험을 모았습니다.">
+    <nav className="section-jump" aria-label="경험 분류">
+      <Link to="/experiences" aria-current={!selected ? 'page' : undefined}>전체</Link>
+      {experiences.map((area) => <Link key={area.id} to={'/experiences?area=' + area.id} aria-current={selected === area ? 'page' : undefined}>{area.title}</Link>)}
+    </nav>
+    {(selected ? [selected] : experiences).map((area) => <section className="section" key={area.id}>
+      <h2>{area.title}</h2><p>{area.summary}</p><CaseList items={area.items} href={(item) => '/experiences/' + item.id} />
+    </section>)}
   </Page>;
+}
+
+/** 사례의 문제, 선택, 검증 범위를 읽는 순서대로 정리한다. */
+function CaseNarrative({ item }: { item: Case }) {
+  return <dl className="case-detail">{[['문제', item.problem], ['판단', item.decision], ['검증 범위', item.verification]].map(([label, value]) => <div key={label}>
+    <dt>{label}</dt><dd>{value}</dd>
+  </div>)}</dl>;
+}
+
+/** 프로젝트 소속을 주소와 상단 탐색에서 보존하는 트러블슈팅 상세. */
+function ProjectCaseDetail() {
+  const { projectId, caseId } = useParams();
+  const project = projects.find((item) => item.id === projectId);
+  const item = project && getProjectCases(project.id).find((candidate) => candidate.id === caseId);
+  if (!project || !item) return <NotFound recovery="/projects" label="프로젝트 목록" />;
+  return <>
+    <p className="breadcrumb"><Link to={'/projects/' + project.id}>{project.title}</Link> / 트러블슈팅</p>
+    <Page title={item.title} lead={item.summary}>
+      <p className="meta">{item.role}</p>
+      <DecisionDiagram diagram={item.diagram} />
+      <CaseNarrative item={item} />
+      <EvidenceLinks items={item.evidence} />
+      <Link to={'/projects/' + project.id}>프로젝트의 기술 사례 목록</Link>
+    </Page>
+  </>;
+}
+
+/** 프로젝트와 별개로 쌓은 작업 경험의 상세. */
+function ExperienceDetail() {
+  const { caseId } = useParams();
+  const area = experiences.find((group) => group.items.some((item) => item.id === caseId));
+  const item = area?.items.find((candidate) => candidate.id === caseId);
+  if (!area || !item) return <NotFound recovery="/experiences" label="경험 목록" />;
+  return <Page title={item.title} lead={item.summary}>
+    <p className="breadcrumb"><Link to={'/experiences?area=' + area.id}>{area.title} 사례 목록</Link></p>
+    {item.id === 'legacy' && <figure className="runtime-chart">
+      <figcaption>약 1만 건의 CSV 처리 시간 비교</figcaption>
+      <div><span>기존 · 약 30초</span><meter min="0" max="30" value="30" aria-label="기존 약 30초" /></div>
+      <div><span>재구현 · 약 3초</span><meter min="0" max="30" value="3" aria-label="재구현 약 3초" /></div>
+    </figure>}
+    <CaseNarrative item={item} /><EvidenceLinks items={item.evidence} />
+  </Page>;
+}
+
+/** 이전 Engineering 주소를 사례의 현재 소속으로 연결한다. */
+function LegacyCase() {
+  const { caseId } = useParams();
+  if (caseId === 'qa') return <Navigate replace to="/projects/creature" />;
+  const project = projects.find(({ id }) => getProjectCases(id).some((item) => item.id === caseId));
+  if (project && caseId) return <Navigate replace to={casePath(project.id, caseId)} />;
+  if (experiences.some((area) => area.items.some((item) => item.id === caseId))) return <Navigate replace to={'/experiences/' + caseId} />;
+  return <NotFound recovery="/experiences" label="경험 목록" />;
 }
 
 /** 개발 방식과 실제 제공된 연락 수단을 보여준다. */
@@ -263,7 +374,10 @@ function Print() {
     <section className="section"><h2>경력·자격</h2><DataTable headings={['기간', '역할', '업무']} rows={career} /><p>{credentials.join(' / ')}</p></section>
     <section className="section"><h2>주요 역량</h2><DataTable headings={['활용 맥락', '기술']} rows={skills} /></section>
     <section className="section"><h2>완료 팀 프로젝트</h2><DataTable headings={['프로젝트', '역할', '내용']} rows={projects.map((project) => [project.title, project.team, project.summary])} /></section>
-    <section className="section"><h2>대표 사례</h2><DataTable headings={['사례', '요약']} rows={cases.map((item) => [item.title, item.summary])} /><p><a href={profile.github}>{profile.github}</a></p></section>
+    <section className="section"><h2>대표 사례</h2><DataTable headings={['사례', '요약']} rows={[
+      ...projects.flatMap((project) => getProjectCases(project.id).slice(0, 1)),
+      ...experiences.flatMap((group) => group.items.slice(0, 1)),
+    ].map((item) => [item.title, item.summary])} /><p><a href={profile.github}>{profile.github}</a></p></section>
   </Page>;
 }
 

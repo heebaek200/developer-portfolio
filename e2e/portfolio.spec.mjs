@@ -6,7 +6,7 @@ test('홈에서 상세를 탐색하고 새로고침과 잘못된 ID를 처리한
   await page.goto('/');
   const outline = page.getByRole('navigation', { name: '포트폴리오 구성' });
   await expect(outline.locator(':scope > ul > li')).toHaveCount(6);
-  await expect(page.locator('.video-cover img')).toHaveJSProperty('complete', true);
+  await expect(page.locator('.project-teaser img')).toHaveCount(2);
   const project = outline.getByRole('link', { name: '다 같이 키우는 생명체', exact: true });
   await project.click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('다 같이 키우는 생명체');
@@ -45,12 +45,15 @@ test('모바일 탐색을 펼쳐 사례로 이동하고 모션 감소 설정을 
   await expect(outline).toBeHidden();
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await outline.getByRole('link', { name: '스터디룸 예약 관리 시스템', exact: true }).click();
+  await expect(outline).toBeHidden();
+  await toggle.click();
   await outline.getByRole('link', { name: '동시 예약 8건, 성공 1건' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('같은 스터디룸의 동시 예약 제어');
   await expect(outline).toBeHidden();
   await expect(page.getByRole('main')).toBeFocused();
-  await page.getByRole('link', { name: '사례 목록' }).click();
-  await expect(page.getByRole('main').getByRole('link', { name: '같은 스터디룸의 동시 예약 제어' })).toBeVisible();
+  await page.getByRole('link', { name: '프로젝트의 기술 사례 목록' }).click();
+  await expect(page.getByRole('main').getByRole('link', { name: '같은 스터디룸의 동시 예약 제어' }).first()).toBeVisible();
 });
 
 test('화면 폭별 넘침, 테마 유지, 인쇄 레이아웃을 확인한다', async ({ page }) => {
@@ -72,25 +75,82 @@ test('화면 폭별 넘침, 테마 유지, 인쇄 레이아웃을 확인한다',
   expect((await page.pdf({ preferCSSPageSize: true })).subarray(0, 4).toString()).toBe('%PDF');
 });
 
-test('외부 미디어가 실패해도 원본과 본문을 표시한다', async ({ page }) => {
+test('시연 영상이 실패해도 원본과 본문을 표시한다', async ({ page }) => {
   await page.route('**/*.mp4', (route) => route.abort());
   await page.goto('/#/projects/creature');
-  await page.getByRole('button', { name: '영상 열기' }).click();
-  await expect(page.getByRole('status')).toHaveText('미디어를 불러오지 못했습니다.');
+  await page.getByRole('button', { name: '성장 영상 열기' }).click();
+  await expect(page.getByRole('status')).toHaveText('영상을 불러오지 못했습니다.');
   await expect(page.getByRole('link', { name: '원본 보기' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '역할과 팀 성과' })).toBeVisible();
 });
 
 test('이미지 확대를 키보드로 닫으면 포커스가 돌아온다', async ({ page }) => {
-  await page.route('https://raw.githubusercontent.com/**', (route) => route.fulfill({
-    contentType: 'image/svg+xml',
-    body: '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"/>',
-  }));
   await page.goto('/#/projects/study-room');
-  const trigger = page.getByRole('button', { name: /이미지 확대/ });
+  const trigger = page.getByRole('button', { name: '예약 신청 이미지 확대' });
   await trigger.click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toBeHidden();
   await expect(trigger).toBeFocused();
+});
+
+test('두 프로젝트 본문에서 실제 기능 화면 네 개씩을 디코딩한다', async ({ page }) => {
+  for (const project of ['creature', 'study-room']) {
+    await page.goto('/#/projects/' + project);
+    await page.getByRole('button', { name: '실제 기능 화면', exact: true }).click();
+    await expect(page.getByRole('heading', { name: '실제 기능 화면' })).toBeFocused();
+    const images = page.locator('[data-gallery="features"] .exhibit-trigger img');
+    await expect(images).toHaveCount(4);
+    for (const image of await images.all()) {
+      await image.scrollIntoViewIfNeeded();
+      await image.evaluate((element) => element.decode());
+      expect(await image.evaluate((element) => element.naturalWidth)).toBeGreaterThan(300);
+    }
+  }
+});
+
+test('실제 시연 파일을 재생하고 이전 사례 주소를 새 소속으로 연결한다', async ({ page }) => {
+  await page.goto('/#/projects/creature');
+  await page.getByRole('button', { name: '공개 그룹 가입 시연 보기' }).click();
+  const clip = page.getByRole('dialog').locator('video');
+  await expect.poll(() => clip.evaluate((element) => element.readyState)).toBeGreaterThan(0);
+  await clip.evaluate((element) => element.play().then(() => undefined));
+  await expect.poll(() => clip.evaluate((element) => element.currentTime)).toBeGreaterThan(0);
+  await page.goto('/#/engineering/reservation');
+  await expect(page).toHaveURL(/#\/projects\/study-room\/cases\/reservation$/);
+  await expect(page.getByRole('figure', { name: '같은 방을 예약하는 요청 A와 B' })).toBeVisible();
+  await page.goto('/#/engineering/legacy');
+  await expect(page).toHaveURL(/#\/experiences\/legacy$/);
+  await expect(page.getByRole('figure').filter({ hasText: 'CSV 처리 시간 비교' })).toBeVisible();
+});
+
+test('프로젝트에 귀속된 모든 기술 사례가 자체 도식과 근거를 제공한다', async ({ page }) => {
+  for (const [project, expectedCount] of [['creature', 5], ['study-room', 3]]) {
+    await page.goto('/#/projects/' + project);
+    const links = page.locator('.case-list').getByRole('link');
+    await expect(links).toHaveCount(expectedCount);
+    const paths = await links.evaluateAll((items) => items.map((item) => item.getAttribute('href')));
+    for (const path of paths) {
+      expect(path).toContain('#/projects/' + project + '/cases/');
+      await page.goto('/' + path);
+      await expect(page.locator('.decision-diagram')).toBeVisible();
+      await expect(page.getByText('검증 범위', { exact: true })).toBeVisible();
+      await expect(page.locator('.links a').first()).toBeVisible();
+    }
+  }
+  await page.goto('/#/experiences?area=product-data');
+  await expect(page.getByRole('heading', { name: '제품·데이터' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '현업 개발' })).toHaveCount(0);
+});
+
+test('팀원 담당 사례는 개인 기술 목록에 포함하지 않는다', async ({ page }) => {
+  await page.goto('/#/engineering/qa');
+  await expect(page).toHaveURL(/#\/projects\/creature$/);
+  const credits = page.getByRole('row').filter({ hasText: '팀원 · 담당 사례' });
+  for (const title of ['아바타 렌더링 방식 선택', '공통 헤더 시즌 타이머 갱신', '부화 전 퀘스트 완료 오류 대응']) {
+    await expect(credits).toContainText(title);
+  }
+  for (const id of ['avatar-rendering', 'season-header', 'qa']) {
+    await expect(page.locator('a[href$="/cases/' + id + '"]')).toHaveCount(0);
+  }
 });
