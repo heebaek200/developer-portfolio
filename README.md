@@ -2,6 +2,8 @@
 
 React, TypeScript, Vite로 구성한 정적 포트폴리오입니다.
 
+[포트폴리오 사이트 열기](https://heebaek200.github.io/developer-portfolio/)
+
 ```sh
 npm ci
 npm run dev
