@@ -68,10 +68,15 @@ export function GrowthFilm() {
 /** 순서·동시성·대안 비교를 실제 글자로 렌더링해 확대와 인쇄를 지원한다. */
 export function DecisionDiagram({ diagram }: { diagram: Diagram }) {
   const caption = useId();
-  const rowCount = Math.max(...diagram.columns.map(({ steps }) => steps.length));
+  const rowCount = Math.max(0, ...diagram.columns.map(({ steps }) => steps.length));
   return <figure className="decision-diagram" data-kind={diagram.kind} aria-labelledby={caption}>
     <figcaption id={caption}>{diagram.title}</figcaption>
-    {diagram.kind === 'lanes'
+    {diagram.kind === 'states' ? <div className="table-scroll"><table className="state-transitions">
+      <thead><tr><th scope="col">현재 상태</th><th scope="col">전이 조건</th><th scope="col">다음 상태</th></tr></thead>
+      <tbody>{diagram.transitions?.map(({ from, trigger, to }) => <tr key={trigger}>
+        <td><span>{from}</span></td><td>{trigger}</td><td><span>{to}</span></td>
+      </tr>)}</tbody>
+    </table></div> : diagram.kind === 'lanes'
       ? <div className="table-scroll"><table className="sequence-table">
         <thead><tr>{diagram.columns.map((column) => <th key={column.label} scope="col">{column.label}</th>)}</tr></thead>
         <tbody>{Array.from({ length: rowCount }, (_, index) => <tr key={index}>

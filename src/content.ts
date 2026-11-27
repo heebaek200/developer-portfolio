@@ -12,6 +12,7 @@ export interface Case {
   decision: string;
   verification: string;
   evidence: Evidence[];
+  details?: { heading: string; paragraphs: string[] }[];
 }
 
 export interface Project {
@@ -80,10 +81,11 @@ export const cases: Case[] = [
     outlineTitle: '서버가 꺼지면 작업은?',
     problem: '실행 시점을 메모리에만 의존하면 중단 중 만료된 작업을 놓칠 수 있었습니다.',
     decision: '저장된 상태를 기준으로 복구 대상을 확인하고 예약 작업과 정리 작업의 영향을 분리해 검토했습니다.',
-    verification: '스케줄러 QA에서 기동 후 복구와 중복 요청을 확인했습니다. 동시 중복 요청에서도 실제 작업은 한 번 실행됐습니다.',
+    verification: 'QA-02에서는 동시 중복 요청에도 실제 작업이 한 번만 실행됐습니다. PR #86에는 local·dev 환경의 기동 복구와 부분 실패 복구 검증을 별도로 기록했습니다.',
     evidence: [
       { label: '재시작 정책 결정', url: creature + '/issues/24#issuecomment-6653782943' },
       { label: '스케줄러 QA 기록', url: creature + '/blob/main/docs/test-results/QA-02-rewards-scheduler.md' },
+      { label: 'PR #86 기동·복구 검증', url: creature + '/pull/86#issuecomment-6809447816' },
     ],
   },
   {
@@ -95,14 +97,14 @@ export const cases: Case[] = [
     evidence: [{ label: 'WebSocket PR #90', url: creature + '/pull/90' }, { label: '팀 QA 기록', url: creature + '/tree/main/docs/test-results' }],
   },
   {
-    id: 'integrity', title: '그룹 가입과 테스트 결제의 데이터 정합성', summary: '동시 가입과 결제 재시도에서 팀이 지켜야 할 조건을 확인했습니다.',
-    outlineTitle: '정원 초과? 중복 지급?',
-    problem: '가입이 동시에 처리되면 그룹 정원을 넘길 수 있고, 결제 알림이 중복되면 아이템을 두 번 지급할 수 있었습니다.',
-    decision: '팀은 정원 변경과 활성 소속을 제약으로 보호하고, 결제 완료를 서버에서 확인한 뒤 지급하도록 구현했습니다.',
-    verification: 'MySQL 가입 동시성 테스트와 테스트 PG QA 기록을 남겼습니다. 환불 처리는 팀원이 구현했으며 QA는 테스트 PG 환경에서 진행했습니다.',
+    id: 'integrity', title: '동시 가입에서 그룹 정원과 단일 소속 보호', summary: '정원과 사용자당 활성 그룹 한 개라는 서로 다른 규칙을 DB 변경과 함께 지켰습니다.',
+    outlineTitle: '정원이 한 자리 남았을 때',
+    problem: '남은 자리를 여러 사람이 동시에 요청하거나, 같은 사용자가 서로 다른 그룹에 동시에 가입할 수 있었습니다.',
+    decision: '그룹의 정원 변경과 멤버십 생성을 한 트랜잭션으로 처리하고, 활성 소속의 유일성을 DB 제약으로 보호했습니다.',
+    verification: 'MySQL 통합 검증에서 남은 한 자리에 동시 요청한 경우 한 명만 가입했고, 같은 사용자의 두 그룹 동시 요청에서도 활성 소속이 하나 남았습니다.',
     evidence: [
       { label: '그룹 가입 PR #45', url: creature + '/pull/45' },
-      { label: '테스트 PG QA', url: creature + '/blob/main/docs/test-results/QA-03-payment-refund.md' },
+      { label: '가입 제한 QA-01', url: creature + '/blob/main/docs/test-results/QA-01-auth-group.md' },
     ],
   },
   {

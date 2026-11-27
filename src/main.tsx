@@ -3,10 +3,10 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { career, credentials, profile, projects, skills, type Case, type Evidence, type Project } from './content';
 import { dossiers, getProjectCases } from './casebook';
-import { experiences } from './experiences';
+import { experienceDiagrams, experiences } from './experiences';
 import { DecisionDiagram, Gallery, GrowthFilm, mediaPath } from './exhibits';
-import { careerChapters, careerStages, contentCareer } from './career-detail';
-import { practiceEvidence, practiceHistory, practicePrinciples, productivityTopics, projectProcesses, reviewDiagram, setupCaptures, workflowRows } from './practice';
+import { careerChapters, careerHighlights, careerStages, contentCareer } from './career-detail';
+import { practiceControls, practiceEvidence, practiceHistory, practicePrinciples, productivityTopics, projectProcesses, reviewDiagram, setupCaptures, workflowDecisions, workflowRows } from './practice';
 import './styles.css';
 import './practice.css';
 
@@ -267,13 +267,21 @@ function Productivity() {
       <h2 id="workflow" tabIndex={-1}>명세를 팀의 작업 기준으로</h2>
       <p>업무 규칙이 여러 문서와 이슈에 반복되면 수정 사항을 팀 전체에 전달하기 어려웠습니다. 공동 육성에서는 문서별 책임을 나누고, 공통 기반을 합의한 뒤 각 기능을 이슈 단위로 나눴습니다. 이후 이슈별 최신 명세와 리뷰 결과를 대조하는 STEYR를 정립했습니다.</p>
       <DataTable headings={['단계', '도구·절차', '팀의 작업 기준', '적용 시점']} rows={workflowRows} />
+      <ol className="workflow-decisions">
+        {workflowDecisions.map(({ name, title, situation, input, output, decision, ownership }) => <li key={name}>
+          <h3>{name} · {title}</h3>
+          <p>{situation}</p>
+          <dl><div><dt>입력</dt><dd>{input}</dd></div><div><dt>산출물</dt><dd>{output}</dd></div></dl>
+          <p>{decision}</p><p>{ownership}</p>
+        </li>)}
+      </ol>
       <EvidenceLinks items={practiceEvidence.slice(1, 3)} />
     </section>
     <section className="section">
       <h2 id="review-bottleneck" tabIndex={-1}>구현이 빨라진 뒤, 리뷰가 병목이 되다</h2>
       <p>여러 구현이 동시에 끝날 때는 설계 변경의 영향과 각 PR의 맥락을 먼저 파악해야 했습니다. 팀 PR을 우선 검토하고 중단점과 다음 확인 항목을 남겼습니다. 다음 작업을 위한 개선 방향은 규칙의 원본을 참조하고, 리뷰를 나누고, 사람의 확인이 필요한 조건을 이슈에 적는 것입니다.</p>
       <DecisionDiagram diagram={reviewDiagram} />
-      <p>AI는 구현과 반복 검사에 활용합니다. 팀과 사용자는 업무 결정과 인수 조건을 정하고, 개발자는 변경 근거를 검토해 결과를 확인합니다.</p>
+      <DataTable headings={['반복되는 문제', '작업 기준', '재개·검토 때 확인할 항목']} rows={practiceControls} />
       <Gallery items={[dossiers.creature.records[0]]} kind="records" />
       <EvidenceLinks items={practiceEvidence.slice(3)} />
     </section>
@@ -339,6 +347,8 @@ function ProjectDetail() {
     <section className="section">
       <h2 id="team" tabIndex={-1}>역할과 팀 성과</h2>
       <DataTable headings={['구분', '기여와 결과']} rows={dossier.roles} />
+      <h3>직접 구현한 백엔드·화면 변경</h3>
+      <EvidenceLinks items={process.implementation} />
       <EvidenceLinks items={project.evidence} />
     </section>
     <section className="section">
@@ -347,6 +357,24 @@ function ProjectDetail() {
       <DecisionDiagram diagram={{ title: '사용자가 기능을 이용하는 흐름', kind: 'timeline', columns: dossier.flow.map((label, index) => ({ label: String(index + 1), steps: [label] })) }} />
       <DataTable headings={['기능', '서비스에서의 역할']} rows={dossier.features} />
       <DecisionDiagram diagram={dossier.architecture} />
+      {project.id === 'creature' && <section className="case-expansion">
+        <h3>프로젝트 종료 후 팀 워크숍</h3>
+        <p>종료 후 워크숍에서 서비스를 다시 설명하며, 함께 키우는 재미와 개인 성장을 어떻게 연결했는지 돌아봤습니다.</p>
+        <DataTable headings={['살펴본 서비스', '팀이 논의한 관점']} rows={[
+          ['산사', '같은 공간을 쓰는 사람들과의 느슨한 관계'],
+          ['투두메이트', '작은 행동을 반복하며 실천하는 흐름'],
+          ['Pikmin Bloom', '일상 행동과 공동 활동을 보상으로 연결하는 방식'],
+        ]} />
+        <p>공동 육성은 무료로 참여하고, 테스트 결제는 개인 아바타 아이템에 적용했습니다. 개인 랭킹은 각자의 활동을 돌아보는 기준이고, 그룹 랭킹은 같은 시즌을 보낸 팀이 함께 쌓은 결과를 보여줍니다.</p>
+        <p>활성 그룹은 한 번에 하나입니다. 탈퇴하거나 추방되면 24시간 뒤 다시 가입할 수 있습니다.</p>
+        <DataTable headings={['운영 역할', '권한 범위']} rows={[
+          ['주 관리자', '자기 그룹을 관리하며 부 관리자를 지정하거나 주 관리자 역할을 넘길 수 있습니다.'],
+          ['부 관리자', '자기 그룹의 운영을 보조합니다.'],
+          ['서비스 전체 관리자', '서비스 차원의 회원과 운영 업무를 관리합니다.'],
+        ]} />
+        <p>완전체 이후에도 돌아올 이유를 만들 수 있는지, 참여가 일부 인원에게 집중될 때 부담을 어떻게 줄일지, 순위 경쟁과 느슨한 유대가 함께 갈 수 있는지는 워크숍의 후속 논의로 남겼습니다.</p>
+        <EvidenceLinks items={[{ label: '프로젝트 포트폴리오 워크숍 회의록', url: 'https://github.com/heebaek200/shared-creature-game/wiki/프로젝트-포트폴리오-워크숍-회의록' }]} />
+      </section>}
     </section>
     <section className="section">
       <h2 id="screens" tabIndex={-1}>실제 기능 화면</h2>
@@ -405,6 +433,14 @@ function CaseNarrative({ item }: { item: Case }) {
   </div>)}</dl>;
 }
 
+/** 사례 상세에 각 판단의 근거와 검증 조건을 덧붙인다. */
+function CaseDepth({ item }: { item: Case }) {
+  return item.details?.map(({ heading, paragraphs }) => <section className="case-expansion" key={heading}>
+    <h2>{heading}</h2>
+    {paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+  </section>);
+}
+
 /** 프로젝트 소속을 주소와 상단 탐색에서 보존하는 트러블슈팅 상세. */
 function ProjectCaseDetail() {
   const { projectId, caseId } = useParams();
@@ -417,6 +453,7 @@ function ProjectCaseDetail() {
       <p className="meta">{item.role}</p>
       <DecisionDiagram diagram={item.diagram} />
       <CaseNarrative item={item} />
+      <CaseDepth item={item} />
       <EvidenceLinks items={item.evidence} />
       <Link to={'/projects/' + project.id}>프로젝트의 기술 사례 목록</Link>
     </Page>
@@ -437,14 +474,14 @@ function ExperienceDetail() {
       <div><span>기존 · 약 30초</span><meter min="0" max="30" value="30" aria-label="기존 약 30초" /></div>
       <div><span>재구현 · 약 3초</span><meter min="0" max="30" value="3" aria-label="재구현 약 3초" /></div>
     </figure>}
-    <CaseNarrative item={item} /><EvidenceLinks items={item.evidence} />
+    <DecisionDiagram diagram={experienceDiagrams[item.id]} />
+    <CaseNarrative item={item} /><CaseDepth item={item} /><EvidenceLinks items={item.evidence} />
   </Page>;
 }
 
 /** 이전 Engineering 주소를 사례의 현재 소속으로 연결한다. */
 function LegacyCase() {
   const { caseId } = useParams();
-  if (caseId === 'qa') return <Navigate replace to="/projects/creature" />;
   if (productivityTopics.some(({ id }) => id === caseId)) return <Navigate replace to={'/productivity/' + caseId} />;
   const project = projects.find(({ id }) => getProjectCases(id).some((item) => item.id === caseId));
   if (project && caseId) return <Navigate replace to={casePath(project.id, caseId)} />;
@@ -457,7 +494,7 @@ function Print() {
   return <Page title={profile.name + ' · ' + profile.role} lead={profile.introduction}>
     <button className="quiet-button print-action" onClick={() => window.print()}>인쇄 또는 PDF 저장</button>
     <section className="section"><h2>개발 방식</h2><PracticePrinciples /></section>
-    <section className="section"><h2>경력·자격</h2><DataTable headings={['기간', '역할', '업무']} rows={career} /><p>{credentials.join(' / ')}</p></section>
+    <section className="section"><h2>경력·자격</h2><DataTable headings={['기간', '역할', '업무']} rows={career} /><DataTable headings={['경험', '주요 업무']} rows={careerHighlights} /><p>{credentials.join(' / ')}</p></section>
     <section className="section"><h2>주요 역량</h2><DataTable headings={['활용 맥락', '기술']} rows={skills} /></section>
     <section className="section"><h2>완료 팀 프로젝트</h2><DataTable headings={['프로젝트', '역할', '내용']} rows={projects.map((project) => [project.title, project.team, project.summary])} /></section>
     <section className="section"><h2>대표 사례</h2><DataTable headings={['사례', '요약']} rows={[
