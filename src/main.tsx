@@ -74,12 +74,6 @@ function Layout() {
 
   return <>
     <a className="skip" href="#main-content" onClick={(e) => { e.preventDefault(); main.current?.focus(); }}>본문으로 건너뛰기</a>
-    <header className="site-header">
-      <div className="header-inner">
-        <Link className="brand" to="/">이희백</Link>
-        <button className="quiet-button" onClick={toggleTheme}>{theme === 'dark' ? '라이트 모드' : '다크 모드'}</button>
-      </div>
-    </header>
     <div className="site-layout">
       <SiteOutline pathname={pathname} />
       <main id="main-content" ref={main} tabIndex={-1}>
@@ -99,7 +93,12 @@ function Layout() {
         </div>
       </main>
     </div>
-    <footer className="site-footer"><span>이희백</span><Link to="/print">인쇄용 요약</Link><a href={profile.github}>GitHub</a></footer>
+    <footer className="site-footer">
+      <span>이희백</span>
+      <Link to="/print">인쇄용 요약</Link>
+      <a href={profile.github}>GitHub</a>
+      <button type="button" className="quiet-button theme-toggle" onClick={toggleTheme}>{theme === 'dark' ? '라이트 모드' : '다크 모드'}</button>
+    </footer>
   </>;
 }
 

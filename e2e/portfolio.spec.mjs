@@ -43,7 +43,9 @@ test('모바일 탐색을 펼쳐 사례로 이동하고 모션 감소 설정을 
 test('화면 폭별 넘침, 테마 유지, 인쇄 레이아웃을 확인한다', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' });
   await page.goto('/#/print');
-  await page.getByRole('button', { name: '다크 모드' }).click();
+  await expect(page.getByRole('banner')).toHaveCount(0);
+  const footer = page.getByRole('contentinfo');
+  await footer.getByRole('button', { name: '다크 모드' }).click();
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   for (const width of [390, 1280, 1440]) {
@@ -52,6 +54,7 @@ test('화면 폭별 넘침, 테마 유지, 인쇄 레이아웃을 확인한다',
   }
   await page.emulateMedia({ media: 'print' });
   await expect(page.getByRole('navigation')).toBeHidden();
+  await expect(footer).toBeHidden();
   await expect(page.getByRole('heading', { name: '완료 팀 프로젝트' })).toBeVisible();
   expect((await page.pdf({ preferCSSPageSize: true })).subarray(0, 4).toString()).toBe('%PDF');
 });

@@ -38,11 +38,7 @@ main:focus { outline: none; }
 .skip:focus { transform: translateY(0); }
 
 /* 탐색은 넓게 펼치고 독립적인 본문은 한 컬럼에 둔다. */
-.site-header { border-bottom: 1px solid var(--line); }
-.header-inner, .site-footer, .site-layout { width: min(100% - 3rem, 76rem); margin-inline: auto; }
-.header-inner { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem 2rem; padding-block: 1.1rem; }
-.brand { color: var(--ink); font-weight: 750; text-decoration: none; }
-.header-inner button { margin-left: auto; }
+.site-footer, .site-layout { width: min(100% - 3rem, 76rem); margin-inline: auto; }
 .quiet-button { font-size: .875rem; }
 .site-layout {
   --page-top: clamp(2.25rem, 6vw, 5rem);
@@ -51,7 +47,8 @@ main:focus { outline: none; }
   column-gap: clamp(1.75rem, 4vw, 4rem);
 }
 main { max-width: 58rem; min-width: 0; padding-block: var(--page-top); min-height: 60vh; }
-.site-footer { display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; border-top: 1px solid var(--line); padding-block: 1.1rem 2rem; }
+.site-footer { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.4rem; border-top: 1px solid var(--line); padding-block: 1.1rem 2rem; }
+.site-footer .theme-toggle { margin-inline-start: auto; min-height: 44px; }
 
 /* 목록의 들여쓰기와 연결선으로 사이트 계층을 드러낸다. */
 .site-outline { position: sticky; top: 1.25rem; align-self: start; margin-top: var(--page-top); padding-right: .65rem; max-height: calc(100dvh - 2.5rem); overflow: auto; }
@@ -104,7 +101,7 @@ th { font-weight: 700; }
 figcaption { margin-top: .4rem; font-size: .875rem; }
 
 @media (max-width: 53rem) {
-  .header-inner, .site-footer, .site-layout { width: calc(100% - 2rem); }
+  .site-footer, .site-layout { width: calc(100% - 2rem); }
   .site-layout { display: block; --page-top: 2.25rem; }
   .site-outline { position: static; max-height: none; overflow: visible; padding: 0; margin: .85rem 0 0; }
   .outline-heading { display: none; }
@@ -158,7 +155,7 @@ figcaption { margin-top: .4rem; font-size: .875rem; }
 @page { size: A4; margin: 15mm; }
 @media print {
   :root, :root[data-theme="dark"] { --paper: white; --ink: black; --muted: #252525; --accent: #252525; --line: #aaa; color-scheme: light; }
-  .site-header, .site-footer, .site-outline, .skip, .print-action, .project-media video, .video-cover { display: none; }
+  .site-footer, .site-outline, .skip, .print-action, .project-media video, .video-cover { display: none; }
   .site-layout { display: block; width: 100%; }
   main { width: 100%; max-width: none; padding: 0; }
   .page-heading, .section { margin-block: 0 .85rem; padding-top: .5rem; }
