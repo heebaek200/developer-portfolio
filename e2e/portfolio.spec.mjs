@@ -15,7 +15,7 @@ test('홈에서 상세를 탐색하고 새로고침과 잘못된 ID를 처리한
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('다 같이 키우는 생명체');
   await page.goBack();
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('팀이 검증할 수 있게');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('팀이 만드는 방식도 개선합니다');
   await page.goto('/#/projects/missing');
   await page.getByRole('link', { name: '프로젝트 목록', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('완료 팀 프로젝트');
@@ -134,7 +134,7 @@ test('프로젝트에 귀속된 모든 기술 사례가 자체 도식과 근거�
       expect(path).toContain('#/projects/' + project + '/cases/');
       await page.goto('/' + path);
       await expect(page.locator('.decision-diagram')).toBeVisible();
-      await expect(page.getByText('검증 범위', { exact: true })).toBeVisible();
+      await expect(page.getByText('적용과 결과', { exact: true })).toBeVisible();
       await expect(page.locator('.links a').first()).toBeVisible();
     }
   }
@@ -152,5 +152,66 @@ test('팀원 담당 사례는 개인 기술 목록에 포함하지 않는다', a
   }
   for (const id of ['avatar-rendering', 'season-header', 'qa']) {
     await expect(page.locator('a[href$="/cases/' + id + '"]')).toHaveCount(0);
+  }
+});
+
+test('홈의 첫 탐색이 개발 생산성으로 이어지고 자격증은 경력에 표시한다', async ({ page }) => {
+  await page.goto('/');
+  const main = page.getByRole('main');
+  await expect(main.getByRole('heading', { level: 1 })).toHaveText('소프트웨어를 만들고, 팀이 만드는 방식도 개선합니다.');
+  await expect(main).not.toContainText(/JLPT|완료 팀 프로젝트 \d+개|90%|CSV/);
+  await expect(main.locator('.facts')).toHaveCount(0);
+  await main.getByRole('link', { name: '제가 설계한 개발 방식' }).click();
+  await expect(page).toHaveURL(/#\/productivity$/);
+  await expect(main.getByRole('heading', { level: 1 })).toHaveText('개발 생산성');
+  await expect(main.getByRole('row').filter({ hasText: 'STEYR' })).toContainText('공동 육성 종료 후 정립');
+  await expect(main.locator('[data-gallery="setup"] img')).toHaveCount(2);
+  await page.goto('/#/career');
+  await expect(main.getByRole('heading', { name: '업무 시스템과 복잡한 화면' })).toBeVisible();
+  await expect(main.getByRole('heading', { name: '프리랜서 영상 편집·채널 운영' })).toBeVisible();
+  await expect(main).toContainText('JLPT N1 · 2021년 취득');
+});
+
+test('두 프로젝트의 첫 시각 자료는 실제 협업 보드이며 기능 갤러리는 유지한다', async ({ page }) => {
+  for (const [project, alt] of [['study-room', '스터디룸 GitHub Projects 로드맵'], ['creature', '작업 칸반']]) {
+    await page.goto('/#/projects/' + project);
+    const main = page.getByRole('main');
+    const firstImage = main.locator('img').first();
+    await expect(firstImage).toHaveAttribute('alt', alt);
+    await firstImage.scrollIntoViewIfNeeded();
+    await firstImage.evaluate((image) => image.decode());
+    await expect(main.locator('[data-gallery="features"] img')).toHaveCount(4);
+    if (project === 'study-room') {
+      await expect(firstImage).toHaveAttribute('src', './evidence/study-roadmap.png');
+      await expect(main.getByRole('link', { name: '스터디룸 Projects 보드' })).toHaveAttribute('href', 'https://github.com/users/heebaek200/projects/5');
+    }
+  }
+});
+
+test('이전 개발 생산성·About 주소는 새 정보 구조로 연결된다', async ({ page }) => {
+  await page.goto('/#/experiences?area=productivity');
+  await expect(page).toHaveURL(/#\/productivity$/);
+  await page.goto('/#/engineering/workflow');
+  await expect(page).toHaveURL(/#\/productivity\/workflow$/);
+  await expect(page.getByRole('heading', { name: '명세를 팀의 작업 기준으로' })).toBeFocused();
+  await page.goto('/#/about');
+  await expect(page).toHaveURL(/#\/$/);
+  await expect(page.getByRole('contentinfo').getByRole('link', { name: 'GitHub' })).toBeVisible();
+});
+
+test('공개 페이지와 인쇄 요약에 내부 보고용 문구가 남아 있지 않다', async ({ page }) => {
+  const roots = ['', 'productivity', 'projects', 'projects/creature', 'projects/study-room', 'experiences', 'career', 'skills', 'print'];
+  const paths = new Set(roots.map((root) => '/#/' + root));
+  const internalWording = /미검증|NOT RUN|재실행하지 않았|검증 결과에 포함되지|검증 범위 밖|확인하지 못했|별도로 측정하지|제시할 자료는 없|증빙 미확보|\(회고\)|\(사용자 진술\)/;
+  const main = page.getByRole('main');
+  for (const path of paths) {
+    await page.goto(path);
+    await expect(main.getByRole('heading', { level: 1 })).toBeVisible();
+    await expect(main).not.toContainText(internalWording);
+    if (!path.endsWith('/experiences/legacy')) await expect(main).not.toContainText(/약 30초|약 90%/);
+    const detailLinks = await main.locator('a').evaluateAll((anchors) => anchors.map((link) => link.getAttribute('href')).filter((href) =>
+      href?.startsWith('#/experiences/') || href?.includes('/cases/'),
+    ));
+    for (const link of detailLinks) paths.add('/' + link);
   }
 });

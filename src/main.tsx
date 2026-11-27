@@ -5,20 +5,23 @@ import { career, credentials, profile, projects, skills, type Case, type Evidenc
 import { dossiers, getProjectCases } from './casebook';
 import { experiences } from './experiences';
 import { DecisionDiagram, Gallery, GrowthFilm, mediaPath } from './exhibits';
+import { careerChapters, careerStages, contentCareer } from './career-detail';
+import { practiceEvidence, practiceHistory, practicePrinciples, productivityTopics, projectProcesses, reviewDiagram, setupCaptures, workflowRows } from './practice';
 import './styles.css';
+import './practice.css';
 
 interface OutlineItem { url: string; label: string; children?: OutlineItem[] }
 
 const menus: OutlineItem[] = [
   { url: '/', label: 'Home' },
-  { url: '/career', label: 'Career' },
-  { url: '/skills', label: 'Skills' },
+  { url: '/productivity', label: '개발 생산성', children: productivityTopics.map(({ id, title }) => ({ url: '/productivity/' + id, label: title })) },
   { url: '/projects', label: 'Projects', children: projects.map(({ id, title }) => ({
     url: '/projects/' + id, label: title,
     children: getProjectCases(id).map((item) => ({ url: casePath(id, item.id), label: item.outlineTitle })),
   })) },
   { url: '/experiences', label: 'Experiences', children: experiences.map(({ id, title }) => ({ url: '/experiences?area=' + id, label: title })) },
-  { url: '/about', label: 'About' },
+  { url: '/career', label: 'Career' },
+  { url: '/skills', label: 'Skills' },
 ];
 
 /** 사례의 소속과 안정적인 상세 주소를 함께 결정한다. */
@@ -101,6 +104,8 @@ function Layout() {
         <div key={pathname}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/productivity" element={<Productivity />} />
+            <Route path="/productivity/:topic" element={<Productivity />} />
             <Route path="/career" element={<Career />} />
             <Route path="/skills" element={<Skills />} />
             <Route path="/projects" element={<Projects />} />
@@ -110,7 +115,7 @@ function Layout() {
             <Route path="/experiences/:caseId" element={<ExperienceDetail />} />
             <Route path="/engineering" element={<Navigate replace to="/experiences" />} />
             <Route path="/engineering/:caseId" element={<LegacyCase />} />
-            <Route path="/about" element={<About />} />
+            <Route path="/about" element={<Navigate replace to="/" />} />
             <Route path="/print" element={<Print />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -136,36 +141,53 @@ function EvidenceLinks({ items }: { items: Evidence[] }) {
   return !!items.length && <ul className="links">{items.map((item) => <li key={item.url}><a href={item.url}>{item.label}</a></li>)}</ul>;
 }
 
-/** 홈에서 실제 화면과 함께 두 프로젝트의 상세 사례집을 소개한다. */
+/** 홈에서 개발자의 관점과 그 관점이 발전한 과정부터 소개한다. */
 function Home() {
   return <>
-    <header className="hero">
-      <p className="eyebrow">{profile.role}</p>
-      <h1>{profile.headline}</h1>
+    <header className="hero identity-hero">
+      <p className="eyebrow">{profile.name} · {profile.role}</p>
+      <h1>{profile.headline.map((line, index) => <span key={line}>{index === 0 ? '' : ' '}{line}</span>)}</h1>
       <p className="lead">{profile.introduction}</p>
-      <ul className="facts"><li>개발 실무 6년 6개월</li><li>완료 팀 프로젝트 {projects.length}개</li><li>JLPT N1 · 2021년 취득</li></ul>
+      <div className="identity-actions">
+        <Link className="primary-link" to="/productivity">제가 설계한 개발 방식</Link>
+        <Link to="/career">경력과 역할</Link>
+      </div>
     </header>
-    <section className="section"><h2>프로젝트 사례집</h2>
-      <div className="project-exhibits">{projects.map((project) => <ProjectTeaser key={project.id} project={project} />)}</div>
+    <section className="section identity-practice">
+      <h2>팀이 같은 기준에서 시작하고, 함께 검증하도록</h2>
+      <PracticePrinciples />
     </section>
-    <section className="section"><h2>프로젝트 밖의 경험</h2>
-      <ul className="case-list">{experiences.map((area) => <li key={area.id}><Link to={'/experiences?area=' + area.id}>{area.title}</Link><p>{area.summary}</p></li>)}</ul>
+    <section className="section">
+      <h2>개발 방식이 발전해 온 과정</h2>
+      <ol className="practice-history">{practiceHistory.map((item) => <li key={item.label}>
+        <p className="eyebrow">{item.label}</p><h3><Link to={item.path}>{item.heading}</Link></h3><p>{item.detail}</p>
+      </li>)}</ol>
+    </section>
+    <section className="section"><h2>팀 프로젝트에서 적용한 방식</h2>
+      <div className="project-exhibits">{projects.map((project) => <ProjectTeaser key={project.id} project={project} />)}</div>
     </section>
   </>;
 }
 
-/** 실제 캡처, 서비스 요약, 역할을 한 프로젝트 소개 안에서 연결한다. */
+/** 개발 방식에서 줄이고자 한 비용을 공통 원칙으로 정리한다. */
+function PracticePrinciples() {
+  return <dl className="practice-principles">{practicePrinciples.map((item) => <div key={item.title}>
+    <dt>{item.title}</dt><dd>{item.description}</dd>
+  </div>)}</dl>;
+}
+
+/** 프로젝트의 실제 협업 화면과 개발 과정의 요약을 연결한다. */
 function ProjectTeaser({ project }: { project: Project }) {
   const dossier = dossiers[project.id];
-  const cover = dossier.captures[2];
+  const cover = dossier.records[0] ?? dossier.captures[2];
   return <article className={'project-teaser project-' + project.id}>
     <div className="teaser-copy">
       <p className="eyebrow">{project.team}</p>
       <h2><Link to={'/projects/' + project.id}>{project.title}</Link></h2>
-      <p>{dossier.strap}</p>
-      <p className="teaser-stack">{project.stack}</p>
+      <p>{project.id === 'creature' ? '초기화부터 명세 변경과 리뷰까지 이어진 팀 개발' : '공동 설계, 이슈 분담, 교차 테스트로 연결한 팀 개발'}</p>
+      <p className="teaser-stack">{dossier.strap}</p>
     </div>
-    <img loading="lazy" src={mediaPath(project.id === 'creature' ? 'creature-showcase' : cover.key)} alt={cover.label + ' 시연 화면'} />
+    <img loading="lazy" src={mediaPath(cover.key, cover.extension)} alt={cover.label + ' 실제 화면'} />
   </article>;
 }
 
@@ -181,13 +203,20 @@ function DataTable({ headings, rows }: { headings: string[]; rows: string[][] })
 function Career() {
   return <Page title="개발과 사용자 경험을 함께 쌓아온 경력">
     <DataTable headings={['기간', '역할', '업무']} rows={career} />
-    <section className="section"><h2>실무에서 개선한 일</h2><p><Link to="/experiences/legacy">레거시 CSV 처리 프로그램 재설계</Link></p>
-      <DataTable headings={['사례', '업무']} rows={[
-        ['메타데이터 기반 공통 코어', 'DB의 메타 정의를 서버 검증과 화면 필드가 참조하도록 구성했습니다.'],
-        ['사내 도시락 신청 자동화', '신청·취소 화면, 집계와 전달 흐름을 연결했습니다.'],
-        ['SaaS 데이터 격리', '고객사별 조회 조건 누락을 줄이기 위한 공통 조건 적용 방향을 검토했습니다.'],
-        ['콘텐츠 운영', '채널 동향 분석, 사용자 반응이 집중된 구간 탐색, 성과에 따른 제작 시간 재배분을 수행했습니다.'],
-      ]} />
+    <section className="section">
+      <h2>일본 IT 기업 · 시스템 엔지니어</h2>
+      <p>PHP, JavaScript, PostgreSQL을 기반으로 제조업 사내 시스템과 운송·창고 SaaS의 개발과 유지보수를 담당했습니다.</p>
+      <DataTable headings={['경력 단계', '업무와 역할']} rows={careerStages} />
+      {careerChapters.map(({ title, rows }) => <div className="career-chapter" key={title}>
+        <h3>{title}</h3><DataTable headings={['업무', '수행 내용']} rows={rows} />
+      </div>)}
+      <p><Link to="/experiences?area=professional">현업 문제 해결 사례</Link></p>
+    </section>
+    <section className="section">
+      <h2>프리랜서 영상 편집·채널 운영</h2>
+      <p>콘텐츠 기획, 편집, 데이터 분석, 제작 일정 관리를 하나의 작업으로 운영했습니다.</p>
+      <DataTable headings={['업무', '수행 내용']} rows={contentCareer} />
+      <p><Link to="/experiences?area=product-data">제품·데이터 경험 사례</Link></p>
     </section>
     <section className="section"><h2>학력·교육·자격</h2><p>동아대학교 컴퓨터공학과 학사 · 2014년 졸업</p>
       <p>공공데이터 융합 생성형 AI 활용 풀스택 개발자 양성과정 · 2026년 7월부터 수강 중</p>
@@ -203,19 +232,74 @@ function Skills() {
   </Page>;
 }
 
+/** 작업의 시작, 명세, 리뷰를 연결해 생산성을 높인 실제 과정과 다음 개선 방향을 보여준다. */
+function Productivity() {
+  const { topic } = useParams();
+  const selected = productivityTopics.find((item) => item.id === topic);
+  useEffect(() => {
+    if (!selected) return;
+    const frame = requestAnimationFrame(() => {
+      const heading = document.getElementById(selected.id);
+      heading?.focus({ preventScroll: true });
+      heading?.scrollIntoView({ block: 'start' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [selected]);
+  if (topic && !selected) return <NotFound recovery="/productivity" label="개발 생산성으로" />;
+
+  return <Page title="개발 생산성" lead="팀이 무엇을 만들어야 하는지 빨리 이해하고, 같은 기준에서 구현하고, 결과를 믿고 통합할 수 있도록 개발 과정을 설계합니다.">
+    <PracticePrinciples />
+    <nav className="section-jump" aria-label="개발 생산성 목차">
+      {productivityTopics.map((item) => <Link key={item.id} to={'/productivity/' + item.id} aria-current={topic === item.id ? 'location' : undefined}>{item.title}</Link>)}
+    </nav>
+    <section className="section">
+      <h2>공통화를 코드에서 팀 작업으로</h2>
+      <p>일본 실무에서 화면과 입력 검증에 중복되던 규칙을 메타데이터로 모았습니다. 다음 팀 프로젝트에서는 같은 문제를 작업 환경과 명세에서도 마주했습니다. 사람이 바뀌어도 규칙을 찾아 적용하고, 변경할 때 영향받는 작업을 확인할 수 있는 흐름을 만들기 시작했습니다.</p>
+      <p><Link to="/experiences/metadata-core">업무 화면 공통화 사례</Link></p>
+    </section>
+    <section className="section">
+      <h2 id="bootstrapper" tabIndex={-1}>환경 초기화와 온보딩</h2>
+      <p>팀원이 설계와 이슈 작업을 바로 시작할 수 있도록 저장소, Wiki, Projects 준비를 Bootstrapper에 모았습니다. 저장소를 만드는 단계와 팀 작업 환경을 구성하는 단계로 나눠, 각 단계의 결과를 확인하고 이어서 진행할 수 있게 했습니다.</p>
+      <Gallery items={setupCaptures} kind="setup" />
+      <EvidenceLinks items={practiceEvidence.slice(0, 1)} />
+    </section>
+    <section className="section">
+      <h2 id="workflow" tabIndex={-1}>명세를 팀의 작업 기준으로</h2>
+      <p>업무 규칙이 여러 문서와 이슈에 반복되면 수정 사항을 팀 전체에 전달하기 어려웠습니다. 공동 육성에서는 문서별 책임을 나누고, 공통 기반을 합의한 뒤 각 기능을 이슈 단위로 나눴습니다. 이후 이슈별 최신 명세와 리뷰 결과를 대조하는 STEYR를 정립했습니다.</p>
+      <DataTable headings={['단계', '도구·절차', '팀의 작업 기준', '적용 시점']} rows={workflowRows} />
+      <EvidenceLinks items={practiceEvidence.slice(1, 3)} />
+    </section>
+    <section className="section">
+      <h2 id="review-bottleneck" tabIndex={-1}>구현이 빨라진 뒤, 리뷰가 병목이 되다</h2>
+      <p>여러 구현이 동시에 끝날 때는 설계 변경의 영향과 각 PR의 맥락을 먼저 파악해야 했습니다. 팀 PR을 우선 검토하고 중단점과 다음 확인 항목을 남겼습니다. 다음 작업을 위한 개선 방향은 규칙의 원본을 참조하고, 리뷰를 나누고, 사람의 확인이 필요한 조건을 이슈에 적는 것입니다.</p>
+      <DecisionDiagram diagram={reviewDiagram} />
+      <p>AI는 구현과 반복 검사에 활용합니다. 팀과 사용자는 업무 결정과 인수 조건을 정하고, 개발자는 변경 근거를 검토해 결과를 확인합니다.</p>
+      <Gallery items={[dossiers.creature.records[0]]} kind="records" />
+      <EvidenceLinks items={practiceEvidence.slice(3)} />
+    </section>
+    <section className="section"><h2>두 팀 프로젝트에서의 적용</h2>
+      <ul className="case-list">
+        <li><Link to="/projects/study-room">스터디룸 예약 관리 시스템</Link><p>공동 설계, 이슈 단위 분담, PR 리뷰와 교차 테스트를 팀의 작업 흐름으로 연결했습니다.</p></li>
+        <li><Link to="/projects/creature">다 같이 키우는 생명체</Link><p>초기 환경을 자동화하고, 명세·보드·일일 리포트·통합 QA를 같은 개발 과정에서 운영했습니다.</p></li>
+      </ul>
+    </section>
+  </Page>;
+}
+
 /** 완료 프로젝트 목록을 상세 경로와 연결한다. */
 function Projects() {
-  return <Page title="완료 팀 프로젝트" lead="실제 화면에서 시작해, 설계 결정과 검증 범위까지 이어지는 두 프로젝트의 사례집입니다.">
+  return <Page title="완료 팀 프로젝트" lead="공동 설계에서 업무 분담, PR 리뷰, 기능 통합과 QA까지 팀이 프로젝트를 추진한 과정을 정리했습니다.">
     <div className="project-exhibits">{projects.map((project) => <ProjectTeaser key={project.id} project={project} />)}</div>
   </Page>;
 }
 
 const projectSections = [
+  ['process', '추진 절차'],
+  ['team', '역할과 팀 성과'],
   ['purpose', '기획과 서비스'],
   ['screens', '실제 기능 화면'],
-  ['team', '역할과 협업'],
   ['decisions', '기술적 판단'],
-  ['verification', '검증과 회고'],
+  ['verification', '검증과 다음 개선'],
 ];
 
 /** 동일한 본문 안에서 각 섹션을 스크롤하고 키보드 포커스를 옮긴다. */
@@ -235,12 +319,28 @@ function ProjectDetail() {
   const project = projects.find((item) => item.id === projectId);
   if (!project) return <NotFound recovery="/projects" label="프로젝트 목록" />;
   const dossier = dossiers[project.id];
+  const process = projectProcesses[project.id];
   const projectCases = getProjectCases(project.id);
   const featured = projectCases.find((item) => item.id === dossier.featuredCase);
-  return <Page title={project.title} lead={dossier.strap}>
+  return <Page title={project.title} lead={project.summary}>
     <ul className="project-facts"><li>{project.period}</li><li>{project.team}</li><li>{project.stack}</li></ul>
     <ProjectSections />
-    {project.id === 'creature' && <GrowthFilm />}
+    <section className="section project-process">
+      <h2 id="process" tabIndex={-1}>프로젝트 추진 절차</h2>
+      <p>{process.lead}</p>
+      <Gallery items={dossier.records} kind="records" />
+      <ol className="process-steps">{process.steps.map(([phase, description]) => <li key={phase}>
+        <h3>{phase}</h3><p>{description}</p>
+      </li>)}</ol>
+      <p className="process-lesson">{process.learning}</p>
+      <EvidenceLinks items={process.evidence} />
+      <p><Link to="/productivity">개발 생산성 페이지</Link></p>
+    </section>
+    <section className="section">
+      <h2 id="team" tabIndex={-1}>역할과 팀 성과</h2>
+      <DataTable headings={['구분', '기여와 결과']} rows={dossier.roles} />
+      <EvidenceLinks items={project.evidence} />
+    </section>
     <section className="section">
       <h2 id="purpose" tabIndex={-1}>기획과 서비스</h2>
       {dossier.background.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
@@ -252,13 +352,7 @@ function ProjectDetail() {
       <h2 id="screens" tabIndex={-1}>실제 기능 화면</h2>
       <p className="meta">테스트 환경의 실제 UI입니다. 시연에는 테스트 계정과 예시 데이터가 사용됐습니다.</p>
       <Gallery items={dossier.captures} />
-    </section>
-    <section className="section">
-      <h2 id="team" tabIndex={-1}>역할과 팀 성과</h2>
-      <DataTable headings={['구분', '기여와 결과']} rows={dossier.roles} />
-      <p>{dossier.management}</p>
-      {!!dossier.records.length && <Gallery items={dossier.records} kind="records" />}
-      <EvidenceLinks items={project.evidence} />
+      {project.id === 'creature' && <GrowthFilm />}
     </section>
     <section className="section">
       <h2 id="decisions" tabIndex={-1}>기술적 판단과 트러블슈팅</h2>
@@ -271,8 +365,8 @@ function ProjectDetail() {
       <CaseList items={projectCases} href={(item) => casePath(project.id, item.id)} />
     </section>
     <section className="section">
-      <h2 id="verification" tabIndex={-1}>검증과 회고</h2>
-      <DataTable headings={['검증 범위', '기록된 결과', '근거']} rows={dossier.qa} />
+      <h2 id="verification" tabIndex={-1}>검증과 다음 개선</h2>
+      <DataTable headings={['테스트 영역', '확인한 동작', '원본']} rows={dossier.qa} />
       <EvidenceLinks items={dossier.qaLinks} />
       <p>{dossier.reflection}</p>
     </section>
@@ -287,12 +381,13 @@ function CaseList({ items, href }: { items: Case[]; href: (item: Case) => string
   </li>)}</ul>;
 }
 
-/** 현업 개발, 개발 생산성, 제품·데이터 경험을 프로젝트와 별도로 탐색한다. */
+/** 현업 개발과 제품·데이터 경험을 프로젝트와 별도로 탐색한다. */
 function ExperienceIndex() {
   const { search } = useLocation();
   const activeArea = new URLSearchParams(search).get('area');
+  if (activeArea === 'productivity') return <Navigate replace to="/productivity" />;
   const selected = experiences.find((area) => area.id === activeArea);
-  return <Page title="경험 사례집" lead="현업 개발, 팀 개발 생산성, 콘텐츠 운영과 데이터 활용 경험을 모았습니다.">
+  return <Page title="경험 사례집" lead="업무 시스템 개발과 콘텐츠 운영에서 마주친 문제, 기술 선택과 실제 적용을 정리했습니다.">
     <nav className="section-jump" aria-label="경험 분류">
       <Link to="/experiences" aria-current={!selected ? 'page' : undefined}>전체</Link>
       {experiences.map((area) => <Link key={area.id} to={'/experiences?area=' + area.id} aria-current={selected === area ? 'page' : undefined}>{area.title}</Link>)}
@@ -305,7 +400,7 @@ function ExperienceIndex() {
 
 /** 사례의 문제, 선택, 검증 범위를 읽는 순서대로 정리한다. */
 function CaseNarrative({ item }: { item: Case }) {
-  return <dl className="case-detail">{[['문제', item.problem], ['판단', item.decision], ['검증 범위', item.verification]].map(([label, value]) => <div key={label}>
+  return <dl className="case-detail">{[['문제', item.problem], ['판단', item.decision], ['적용과 결과', item.verification]].map(([label, value]) => <div key={label}>
     <dt>{label}</dt><dd>{value}</dd>
   </div>)}</dl>;
 }
@@ -331,6 +426,7 @@ function ProjectCaseDetail() {
 /** 프로젝트와 별개로 쌓은 작업 경험의 상세. */
 function ExperienceDetail() {
   const { caseId } = useParams();
+  if (productivityTopics.some(({ id }) => id === caseId)) return <Navigate replace to={'/productivity/' + caseId} />;
   const area = experiences.find((group) => group.items.some((item) => item.id === caseId));
   const item = area?.items.find((candidate) => candidate.id === caseId);
   if (!area || !item) return <NotFound recovery="/experiences" label="경험 목록" />;
@@ -349,34 +445,24 @@ function ExperienceDetail() {
 function LegacyCase() {
   const { caseId } = useParams();
   if (caseId === 'qa') return <Navigate replace to="/projects/creature" />;
+  if (productivityTopics.some(({ id }) => id === caseId)) return <Navigate replace to={'/productivity/' + caseId} />;
   const project = projects.find(({ id }) => getProjectCases(id).some((item) => item.id === caseId));
   if (project && caseId) return <Navigate replace to={casePath(project.id, caseId)} />;
   if (experiences.some((area) => area.items.some((item) => item.id === caseId))) return <Navigate replace to={'/experiences/' + caseId} />;
   return <NotFound recovery="/experiences" label="경험 목록" />;
 }
 
-/** 개발 방식과 실제 제공된 연락 수단을 보여준다. */
-function About() {
-  return <Page title="팀이 검증할 수 있게 개발합니다" lead={profile.introduction}>
-    <DataTable headings={['원칙', '작업 방식']} rows={[
-      ['요구사항 먼저', '기능을 구현하기 전에 사용자 가치와 완료 조건을 정합니다.'],
-      ['반복 업무 표준화', '반복 작업을 문서화하고 유지할 수 있는 범위에서 자동화합니다.'],
-      ['사람이 결과 검증', 'AI를 활용하고 설계 선택·검증·승인에 책임을 집니다.'],
-      ['팀의 자율성', '이슈와 리뷰로 다음 작업과 완료 조건을 공유합니다.'],
-    ]} /><p><a href={profile.github}>GitHub 프로필</a></p>
-  </Page>;
-}
-
 /** 화면과 같은 콘텐츠 데이터로 인쇄 가능한 요약을 제공한다. */
 function Print() {
   return <Page title={profile.name + ' · ' + profile.role} lead={profile.introduction}>
     <button className="quiet-button print-action" onClick={() => window.print()}>인쇄 또는 PDF 저장</button>
+    <section className="section"><h2>개발 방식</h2><PracticePrinciples /></section>
     <section className="section"><h2>경력·자격</h2><DataTable headings={['기간', '역할', '업무']} rows={career} /><p>{credentials.join(' / ')}</p></section>
     <section className="section"><h2>주요 역량</h2><DataTable headings={['활용 맥락', '기술']} rows={skills} /></section>
     <section className="section"><h2>완료 팀 프로젝트</h2><DataTable headings={['프로젝트', '역할', '내용']} rows={projects.map((project) => [project.title, project.team, project.summary])} /></section>
     <section className="section"><h2>대표 사례</h2><DataTable headings={['사례', '요약']} rows={[
       ...projects.flatMap((project) => getProjectCases(project.id).slice(0, 1)),
-      ...experiences.flatMap((group) => group.items.slice(0, 1)),
+      ...experiences.flatMap((group) => group.items.filter(({ id }) => id !== 'legacy').slice(0, 1)),
     ].map((item) => [item.title, item.summary])} /><p><a href={profile.github}>{profile.github}</a></p></section>
   </Page>;
 }

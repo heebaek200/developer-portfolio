@@ -15,6 +15,7 @@ function Exhibit({ item }: { item: Capture }) {
   const [open, setOpen] = useState(false);
   const [failed, setFailed] = useState(false);
   const [motionFailed, setMotionFailed] = useState(false);
+  const imageSource = mediaPath(item.key, item.extension);
 
   function show() {
     setMotionFailed(false);
@@ -26,7 +27,7 @@ function Exhibit({ item }: { item: Capture }) {
     {failed
       ? <p className="exhibit-unavailable" role="status">캡처를 불러오지 못했습니다.</p>
       : <button type="button" className="exhibit-trigger" ref={trigger} onClick={show} aria-label={item.label + (item.motion ? ' 시연 보기' : ' 이미지 확대')}>
-        <img loading="lazy" decoding="async" src={mediaPath(item.key)} alt={item.label} onError={() => setFailed(true)} />
+        <img loading="lazy" decoding="async" src={imageSource} alt={item.label} onError={() => setFailed(true)} />
         <span className="exhibit-action" aria-hidden="true">{item.motion ? '시연 보기' : '이미지 확대'}</span>
       </button>}
     <figcaption><strong>{item.label}</strong><span>{item.caption}</span> <a href={item.source}>원본</a></figcaption>
@@ -37,14 +38,14 @@ function Exhibit({ item }: { item: Capture }) {
       <header><h2 id={titleId}>{item.label}</h2><form method="dialog"><button>닫기</button></form></header>
       {open && (item.motion
         ? motionFailed ? <p role="status">시연을 재생할 수 없습니다. <a href={item.source}>원본 보기</a></p>
-          : <video controls playsInline preload="metadata" poster={mediaPath(item.key)} src={mediaPath(item.key, 'mp4')} aria-label={item.label + ' 녹화 화면'} onError={() => setMotionFailed(true)} />
-        : <img src={mediaPath(item.key)} alt={item.label} />)}
+          : <video controls playsInline preload="metadata" poster={imageSource} src={mediaPath(item.key, 'mp4')} aria-label={item.label + ' 녹화 화면'} onError={() => setMotionFailed(true)} />
+        : <img src={imageSource} alt={item.label} />)}
     </dialog>
   </figure>;
 }
 
 /** 시연과 관리 증빙을 원본 출처와 함께 전시한다. */
-export function Gallery({ items, kind = 'features' }: { items: Capture[]; kind?: 'features' | 'records' }) {
+export function Gallery({ items, kind = 'features' }: { items: Capture[]; kind?: 'features' | 'records' | 'setup' }) {
   return <div className="exhibit-grid" data-gallery={kind}>{items.map((item) => <Exhibit key={item.key} item={item} />)}</div>;
 }
 
