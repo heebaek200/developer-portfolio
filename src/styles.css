@@ -1,0 +1,104 @@
+/* 에디토리얼 색상과 본문에 공통으로 적용하는 기본 스타일 */
+:root {
+  color-scheme: light;
+  --paper: #f8f3e9;
+  --ink: #27211b;
+  --muted: #5e5043;
+  --line: #b7a995;
+  --accent: #8b382a;
+  --surface: #eee4d5;
+  font: 100%/1.65 system-ui, "Malgun Gothic", sans-serif;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #24211e;
+  --ink: #f5eee3;
+  --muted: #d5c5b6;
+  --line: #837464;
+  --accent: #ffae99;
+  --surface: #352e28;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); }
+a { color: var(--accent); text-underline-offset: .2em; }
+button {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding: .5rem .8rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+main:focus { outline: none; }
+.skip { position: absolute; z-index: 1; top: .5rem; left: .75rem; background: var(--paper); padding: .5rem; transform: translateY(-160%); }
+.skip:focus { transform: translateY(0); }
+
+/* 탐색은 넓게 펼치고 독립적인 본문은 한 컬럼에 둔다. */
+.site-header { border-bottom: 1px solid var(--line); }
+.header-inner, .site-footer, main { width: min(100% - 3rem, 72rem); margin-inline: auto; }
+.header-inner { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem 2rem; padding-block: 1.1rem; }
+.brand { color: var(--ink); font-weight: 750; text-decoration: none; }
+nav { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; }
+nav a { color: var(--muted); text-decoration: none; }
+nav a[aria-current="page"], nav a:hover { color: var(--accent); text-decoration: underline; }
+.header-inner button { margin-left: auto; }
+.quiet-button { font-size: .875rem; }
+main { max-width: 58rem; padding-block: clamp(2.25rem, 7vw, 6rem); min-height: 60vh; }
+.site-footer { display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; border-top: 1px solid var(--line); padding-block: 1.1rem 2rem; }
+
+/* 제목의 위계와 큰 여백으로 홈과 상세의 읽기 순서를 드러낸다. */
+h1, h2 { margin: 0; line-height: 1.25; }
+h1 { margin-block: .2em .3em; font-size: clamp(2rem, 5.2vw, 4rem); letter-spacing: -.055em; word-break: keep-all; overflow-wrap: anywhere; }
+.hero h1 { max-width: 19ch; font-family: "Nanum Myeongjo", "Batang", Georgia, serif; }
+h2 { font-size: clamp(1.3rem, 2.2vw, 1.9rem); }
+.lead { max-width: 46rem; margin-block: .7rem 0; color: var(--muted); font-size: clamp(1rem, 1.5vw, 1.2rem); }
+.eyebrow { color: var(--accent); font-weight: 700; margin-block: 0 .35rem; }
+.facts, .links { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; list-style: none; padding: 0; }
+.facts { color: var(--muted); margin-top: 1.75rem; }
+.section { border-top: 1px solid var(--line); padding-top: clamp(1.4rem, 4vw, 2.75rem); margin-block: clamp(2rem, 6vw, 4.5rem); }
+.page-heading { margin-bottom: 2.25rem; }
+.entry { border-top: 1px solid var(--line); padding-block: 1.4rem; }
+.entry p, .case-list p { margin: .25rem 0; }
+.meta, figcaption { color: var(--muted); }
+.case-list { padding: 0; list-style: none; }
+.case-list li { margin-block: 1.1rem; }
+.case-list a { font-weight: 700; }
+.case-detail > div { border-left: 3px solid var(--accent); padding-left: 1rem; margin: 1rem 0 1.75rem; }
+.case-detail dt { font-weight: 750; }
+.case-detail dd { margin: .3rem 0; }
+
+/* 표와 시각 증빙은 화면 폭 안에서 각자 재배치한다. */
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: .8rem .8rem .8rem 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+th { font-weight: 700; }
+.project-media { margin: 1.4rem 0; }
+.project-media img, .project-media video { display: block; max-width: 100%; height: auto; max-height: 34rem; object-fit: contain; }
+.image-trigger { display: inline-grid; gap: .5rem; justify-items: start; max-width: 100%; }
+.project-media dialog { max-width: min(95vw, 64rem); color: var(--ink); background: var(--paper); border: 1px solid var(--line); }
+.project-media dialog form { display: flex; justify-content: end; margin-bottom: .5rem; }
+.video-cover { background: var(--surface); min-height: 10rem; display: grid; justify-items: center; gap: .65rem; padding: 1.5rem; text-align: center; }
+.video-cover img { width: min(100%, 12rem); aspect-ratio: 1; object-fit: contain; }
+figcaption { margin-top: .4rem; font-size: .875rem; }
+
+@media (max-width: 42rem) {
+  .header-inner, .site-footer, main { width: calc(100% - 2rem); }
+  .header-inner nav { order: 3; width: 100%; }
+  th, td { padding-right: .45rem; overflow-wrap: anywhere; }
+}
+
+@page { size: A4; margin: 15mm; }
+@media print {
+  :root, :root[data-theme="dark"] { --paper: white; --ink: black; --muted: #252525; --accent: #252525; --line: #aaa; color-scheme: light; }
+  .site-header, .site-footer, .skip, .print-action, .project-media video, .video-cover { display: none; }
+  main { width: 100%; max-width: none; padding: 0; }
+  .page-heading, .section { margin-block: 0 .85rem; padding-top: .5rem; }
+  h1 { font-size: 24pt; }
+  h2 { font-size: 16pt; break-after: avoid; }
+  tr { break-inside: avoid; }
+  .table-scroll { overflow: visible; }
+}
