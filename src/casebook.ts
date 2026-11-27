@@ -59,7 +59,8 @@ export const dossiers: Record<string, Dossier> = {
     roles: [
       ['개인 · 팀 운영', '공동 설계, 설계 문서 보완, 이슈 분담, PR 리뷰와 일일 리포트 운영'],
       ['개인 · 개발', '백엔드 기반, 스케줄러와 WebSocket, 그룹·관리자 업무, 퀘스트·상점 화면 연동'],
-      ['팀 · 구현 성과', '그룹·퀘스트·성장, 사진 인증, 아바타, 테스트 결제·환불과 QA. 환불 구현과 공통 헤더 시즌 타이머 수정은 팀원이 담당했습니다.'],
+      ['팀 · 구현 성과', '그룹·퀘스트·성장, 사진 인증, 아바타, 테스트 결제·환불과 QA'],
+      ['팀원 · 담당 사례', '아바타 렌더링 방식 선택, 공통 헤더 시즌 타이머 갱신, 부화 전 퀘스트 완료 오류 대응, 환불 구현'],
     ],
     management: '업무 규칙을 설계 문서에서 확인하고 이슈의 완료 조건을 PR 리뷰와 QA로 연결했습니다. 작업 보드는 업무 상태를, 일일 리포트는 진행과 중단 지점을 공유하는 데 썼습니다.',
     captures: [
@@ -152,10 +153,6 @@ const detailedCases: Record<string, Pick<ProjectCase, 'role' | 'diagram'>> = {
     { label: '그룹 가입', steps: ['트랜잭션에서 정원 변경', '활성 소속 제약으로 중복 가입 방지'] },
     { label: '테스트 결제·환불', steps: ['서버가 결제·환불 상태 확인', '확정 상태에서 지급 또는 환불 반영'] },
   ] } },
-  qa: { role: 'QA 발견 이후 팀 수정 작업과 검증 범위 추적', diagram: { title: '유효한 퀘스트를 잘못 차단한 조건', kind: 'comparison', columns: [
-    { label: '발견', steps: ['시즌은 활성, 그룹은 부화 준비 중', '그룹 상태 조건이 완료 요청을 차단'] },
-    { label: '수정', steps: ['시즌·기간과 그룹 상태를 따로 검증', '준비 중인 그룹도 유효한 퀘스트 완료 허용'] },
-  ] } },
   contract: { role: '설계 문서 책임 정리와 변경 검토', diagram: { title: '같은 정보의 복제에서 책임 구분으로', kind: 'comparison', columns: [
     { label: '중복 정의', steps: ['업무 규칙과 API 계약이 여러 문서에 반복', '변경 때 복사본을 함께 고쳐야 함'] },
     { label: '책임 분리', steps: ['고유 ID를 유지하고 문서마다 맡을 범위를 정리', '후속 작업에서 원본 링크로 참조하는 원칙 제안'] },
@@ -181,33 +178,6 @@ const extraCases: AdditionalCase[] = [
       { label: '결과 분리', steps: ['성공은 완료 기록', '실패는 이후 재시도 대상으로 분리'] },
     ] },
     evidence: [{ label: '검증 기록 PR #86', url: creature + '/pull/86' }],
-  },
-  {
-    project: 'creature', id: 'season-header', title: '공통 헤더의 시즌 타이머 갱신 리뷰', outlineTitle: '카운트다운이 멈췄다',
-    summary: '시즌이 바뀌어도 재조회하지 않는 경로와 타이머 정리 누락을 리뷰에서 발견했습니다.',
-    problem: '공통 레이아웃의 플래그가 갱신을 막고, 이전 타이머와 비동기 응답이 남을 수 있었습니다.',
-    decision: '팀원이 추적 로직을 분리하고 시즌 종료·페이지 진입·탭 복귀를 조회 계기로 삼았습니다. 저는 수정 요청과 재리뷰에서 정리와 오래된 응답 차단을 확인했습니다.',
-    verification: '병합 전 코드 재리뷰 범위입니다. 브라우저 실측 결과는 포함하지 않습니다.',
-    role: '개인 코드 리뷰 및 재리뷰 · 수정 구현은 팀원 담당',
-    diagram: { title: '갱신 시점과 이전 상태의 정리', kind: 'timeline', columns: [
-      { label: '갱신 계기', steps: ['시즌 종료 / 진입 / 탭 복귀'] },
-      { label: '기존 작업 정리', steps: ['이전 타이머 정리', '중복 조회 및 오래된 응답 방지'] },
-      { label: '새 상태 반영', steps: ['최신 시즌을 기준으로 카운트다운 표시'] },
-    ] },
-    evidence: [{ label: '시즌 타이머 PR #95', url: creature + '/pull/95' }],
-  },
-  {
-    project: 'creature', id: 'avatar-rendering', title: '20인 그룹의 아바타 렌더링 방식 선택', outlineTitle: 'Canvas 대신 DOM?',
-    summary: '작은 그룹에서 아바타와 말풍선을 다루기에 적합한 브라우저 표현 방식을 비교했습니다.',
-    problem: '위치·클릭·말풍선은 상호작용이 필요한데, 규모에 비해 복잡한 렌더링을 도입하면 유지 비용이 늘어납니다.',
-    decision: '팀은 최대 20명과 기존 Vanilla JS 구성을 고려해 아바타별 DOM 요소와 CSS 전환을 사용했습니다.',
-    verification: '소규모 비교 구현이 근거입니다. 대규모 성능 비교와 작은 화면의 배치 제약은 별도 범위입니다.',
-    role: '팀의 기술 검증 사례',
-    diagram: { title: '같은 동작을 구현하는 두 가지 표현 방식', kind: 'comparison', columns: [
-      { label: 'Canvas', steps: ['한 캔버스에 렌더링', '요소별 클릭 판별과 말풍선 동작을 별도 구현'] },
-      { label: 'DOM·CSS 선택', steps: ['아바타마다 요소·이벤트 배치', '위치와 전환을 CSS로 처리'] },
-    ] },
-    evidence: [{ label: '팀 기술 검증 PR #44', url: creature + '/pull/44' }],
   },
   {
     project: 'study-room', id: 'refund-state', title: '관리자 환불 요청의 중복 처리 방지', outlineTitle: '한 환불을 두 번 처리하면?',
@@ -240,7 +210,7 @@ const extraCases: AdditionalCase[] = [
 
 /** 프로젝트 소속을 한 곳에서 정의해 탐색과 상세 라우팅에서 재사용한다. */
 const caseIdsByProject: Record<string, string[]> = {
-  creature: ['scheduler', 'photo-retention', 'websocket', 'integrity', 'qa', 'season-header', 'contract', 'avatar-rendering'],
+  creature: ['scheduler', 'photo-retention', 'websocket', 'integrity', 'contract'],
   'study-room': ['reservation', 'refund-state', 'reservation-ownership'],
 };
 

@@ -125,7 +125,7 @@ test('실제 시연 파일을 재생하고 이전 사례 주소를 새 소속으
 });
 
 test('프로젝트에 귀속된 모든 기술 사례가 자체 도식과 근거를 제공한다', async ({ page }) => {
-  for (const [project, expectedCount] of [['creature', 8], ['study-room', 3]]) {
+  for (const [project, expectedCount] of [['creature', 5], ['study-room', 3]]) {
     await page.goto('/#/projects/' + project);
     const links = page.locator('.case-list').getByRole('link');
     await expect(links).toHaveCount(expectedCount);
@@ -141,4 +141,16 @@ test('프로젝트에 귀속된 모든 기술 사례가 자체 도식과 근거�
   await page.goto('/#/experiences?area=product-data');
   await expect(page.getByRole('heading', { name: '제품·데이터' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '현업 개발' })).toHaveCount(0);
+});
+
+test('팀원 담당 사례는 개인 기술 목록에 포함하지 않는다', async ({ page }) => {
+  await page.goto('/#/engineering/qa');
+  await expect(page).toHaveURL(/#\/projects\/creature$/);
+  const credits = page.getByRole('row').filter({ hasText: '팀원 · 담당 사례' });
+  for (const title of ['아바타 렌더링 방식 선택', '공통 헤더 시즌 타이머 갱신', '부화 전 퀘스트 완료 오류 대응']) {
+    await expect(credits).toContainText(title);
+  }
+  for (const id of ['avatar-rendering', 'season-header', 'qa']) {
+    await expect(page.locator('a[href$="/cases/' + id + '"]')).toHaveCount(0);
+  }
 });

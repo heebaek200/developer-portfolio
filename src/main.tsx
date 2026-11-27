@@ -348,6 +348,7 @@ function ExperienceDetail() {
 /** 이전 Engineering 주소를 사례의 현재 소속으로 연결한다. */
 function LegacyCase() {
   const { caseId } = useParams();
+  if (caseId === 'qa') return <Navigate replace to="/projects/creature" />;
   const project = projects.find(({ id }) => getProjectCases(id).some((item) => item.id === caseId));
   if (project && caseId) return <Navigate replace to={casePath(project.id, caseId)} />;
   if (experiences.some((area) => area.items.some((item) => item.id === caseId))) return <Navigate replace to={'/experiences/' + caseId} />;

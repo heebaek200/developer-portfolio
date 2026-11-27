@@ -114,14 +114,6 @@ export const cases: Case[] = [
     ],
   },
   {
-    id: 'qa', title: '부화 전 퀘스트 완료 오류 대응', summary: 'QA에서 발견한 409 오류를 그룹 상태와 시즌 규칙을 분리해 수정했습니다.',
-    outlineTitle: '부화 전엔 왜 409?',
-    problem: '시즌이 활성화됐어도 그룹이 부화 준비 중이면 마감 전 퀘스트 완료 요청이 차단됐습니다.',
-    decision: '그룹 상태와 시즌 기간을 따로 검증하고, 화면에서 서버의 오류 사유를 보여주도록 수정했습니다.',
-    verification: '수정 PR이 병합됐습니다. 수정 후 동일 브라우저 시나리오의 재검증 기록은 확인되지 않았습니다.',
-    evidence: [{ label: 'QA 이슈 #135', url: creature + '/issues/135' }, { label: '수정 PR #137', url: creature + '/pull/137' }],
-  },
-  {
     id: 'reservation', title: '같은 스터디룸의 동시 예약 제어', summary: '동일 공간의 잠금과 시간 겹침 재검사를 한 트랜잭션으로 묶었습니다.',
     outlineTitle: '동시 예약 8건, 성공 1건',
     problem: '같은 공간에서 겹치는 시간으로 동시에 요청하면 두 요청이 모두 예약 가능하다고 판단할 수 있었습니다.',
