@@ -185,6 +185,19 @@ test('홈의 첫 탐색이 개발 생산성으로 이어지고 자격증은 경�
   await expect(main).toContainText('JLPT N1 · 2021년 취득');
 });
 
+test('프로젝트 목록은 실제 제품 화면을 대표 이미지로 사용한다', async ({ page }) => {
+  await page.goto('/#/projects');
+  const covers = page.locator('.project-cover img');
+  const files = ['creature-growth.webp', 'study-rooms.webp', 'bootstrapper-project.png'];
+  await expect(covers).toHaveCount(files.length);
+  for (const [index, file] of files.entries()) {
+    const cover = covers.nth(index);
+    await expect(cover).toHaveAttribute('src', './evidence/' + file);
+    await cover.scrollIntoViewIfNeeded();
+    await cover.evaluate((image) => image.decode());
+  }
+});
+
 test('두 팀 프로젝트는 설계 증빙을 먼저 보여주고 협업과 기능 화면을 유지한다', async ({ page }) => {
   for (const [project, alt, count] of [['study-room', '스터디룸 Wiki 설계 문서 목록', 2], ['creature', '공동 육성 설계 문서 목록', 5]]) {
     await page.goto('/#/projects/' + project);

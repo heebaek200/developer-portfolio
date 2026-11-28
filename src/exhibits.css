@@ -1,8 +1,8 @@
-/* 프로젝트의 색감과 실제 캡처로 사례집의 진입점을 만든다. */
+/* 프로젝트 카드에서 실제 제품 화면의 중심을 여백과 프레임으로 드러낸다. */
 .project-exhibits { display: grid; gap: clamp(1.5rem, 3vw, 2.7rem); margin-block: 1.6rem 0; }
 .project-teaser {
   display: grid;
-  grid-template-columns: minmax(0, .9fr) minmax(0, 1.15fr);
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.25fr);
   align-items: center;
   overflow: hidden;
   min-width: 0;
@@ -18,7 +18,17 @@
 .project-teaser a { color: inherit; text-decoration-thickness: .07em; }
 .project-teaser a:focus-visible { outline-color: #fff8e7; }
 .project-teaser p { margin-block: .5rem; }
-.project-teaser > img { display: block; width: 100%; height: 100%; min-height: 16rem; max-height: 26rem; object-fit: cover; object-position: top center; }
+.project-cover {
+  min-width: 0;
+  margin: clamp(.9rem, 2.3vw, 1.7rem);
+  margin-inline-start: 0;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 26%);
+  border-radius: .42rem;
+  background: #eaf1ee;
+}
+.project-cover img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: center top; }
+.project-creature .project-cover img { aspect-ratio: 5 / 4; object-position: center 22%; }
 
 /* 페이지 안에서 읽는 순서를 선택하고 증빙을 직접 탐색한다. */
 .project-facts, .section-jump { display: flex; flex-wrap: wrap; gap: .65rem 1rem; list-style: none; padding: 0; }
@@ -116,7 +126,7 @@
 
 @media (max-width: 43rem) {
   .project-teaser, .exhibit-grid { grid-template-columns: minmax(0, 1fr); }
-  .project-teaser > img { min-height: 0; max-height: 19rem; }
+  .project-cover { margin: 0 1.15rem 1.15rem; }
   .decision-columns { grid-auto-flow: row; grid-auto-columns: auto; }
 }
 

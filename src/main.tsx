@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 're
 import { createRoot } from 'react-dom/client';
 import { HashRouter, Link, Navigate, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { career, credentials, profile, projects, skills, type Case, type Evidence, type Project } from './content';
-import { dossiers, getProjectCases } from './casebook';
+import { dossiers, getProjectCases, type Capture } from './casebook';
 import { experienceDiagrams, experiences } from './experiences';
 import { DecisionDiagram, Gallery, GrowthFilm, mediaPath } from './exhibits';
 import { careerChapters, careerHighlights, careerStages, contentCareer } from './career-detail';
@@ -183,17 +183,24 @@ function PracticePrinciples() {
   </div>)}</dl>;
 }
 
-/** 프로젝트의 실제 설계 목록과 개발 과정의 요약을 연결한다. */
+/** 목록 카드에서 기능 화면의 주요 영역을 제품별 초점에 맞춰 표시한다. */
+function ProjectCover({ capture }: { capture: Capture }) {
+  return <div className="project-cover">
+    <img loading="lazy" decoding="async" src={mediaPath(capture.key, capture.extension)} alt={capture.label} />
+  </div>;
+}
+
+/** 제품의 첫인상과 개발 과정의 요약을 같은 카드에 배치한다. */
 function ProjectTeaser({ project }: { project: Project }) {
-  const cover = projectDesigns[project.id].index;
+  const { cover, strap } = dossiers[project.id];
   return <article className={'project-teaser project-' + project.id}>
     <div className="teaser-copy">
       <p className="eyebrow">{project.team}</p>
       <h2><Link to={'/projects/' + project.id}>{project.title}</Link></h2>
       <p>{project.id === 'creature' ? '초기화부터 명세 변경과 리뷰까지 이어진 팀 개발' : '공동 설계, 이슈 분담, 교차 테스트로 연결한 팀 개발'}</p>
-      <p className="teaser-stack">{dossiers[project.id].strap}</p>
+      <p className="teaser-stack">{strap}</p>
     </div>
-    <img loading="lazy" src={mediaPath(cover.key, cover.extension)} alt={cover.label + ' 실제 화면'} />
+    <ProjectCover capture={cover} />
   </article>;
 }
 
@@ -351,7 +358,7 @@ function Projects() {
           <h3><Link to="/projects/bootstrapper">{bootstrapper.title}</Link></h3>
           <p>{bootstrapper.summary}</p><p className="teaser-stack">{bootstrapper.stack}</p>
         </div>
-        <img loading="lazy" src={mediaPath(setupCaptures[0].key, setupCaptures[0].extension)} alt={setupCaptures[0].label} />
+        <ProjectCover capture={setupCaptures[0]} />
       </article></div>
     </section>
   </Page>;

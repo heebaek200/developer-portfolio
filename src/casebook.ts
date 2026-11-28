@@ -18,6 +18,7 @@ export interface Diagram {
 
 interface Dossier {
   strap: string;
+  cover: Capture;
   background: string[];
   flow: string[];
   architecture: Diagram;
@@ -36,11 +37,14 @@ const study = 'https://github.com/heebaek200/study_room_reservation';
 const creatureRef = creature + '/blob/871c5bea7ae36dac5b4626ec5247a7d0bb880b9a/docs/';
 const studyRef = study + '/blob/42b3d827d467a3c968c21945e8baf4eaa333a289/docs/images/';
 const report = 'https://heebaek200.github.io/study_room_reservation/com.studyroom.reservation.service.ReservationCreateServiceTest/index.html';
+const creatureHome: Capture = { key: 'creature-growth', label: '공동 크리처 성장', caption: '퀘스트 보상이 경험치와 성장에 반영되는 모습', source: creatureRef + 'images/demos/07-creature-growth.gif', motion: true };
+const studyRooms: Capture = { key: 'study-rooms', label: '스터디룸 목록', caption: '수용 인원과 시간당 이용료 비교', source: studyRef + encodeURIComponent('2스터디룸 목록 화면.png') };
 
 /** 실제 실행 기록에서 화면과 연결되는 설명 및 원본을 정의한다. */
 export const dossiers: Record<string, Dossier> = {
   creature: {
     strap: '각자의 작은 실천으로 하나의 생명체를 키우다',
+    cover: creatureHome,
     background: [
       '꾸준히 실천하기 어려운 일상 과제에 공동 목표를 더했습니다. 실명을 드러내지 않아도 일일·주간 퀘스트의 기여가 하나의 크리처 성장으로 쌓입니다.',
       '공동 성장과 순위 경쟁은 무료 참여 영역으로 설계했고, 상점은 개인 아바타 꾸미기에 연결했습니다. 프로젝트 종료 후 워크숍에서는 성장 과정과 권한 차이를 발표에서 더 명확히 보여주자는 의견이 나왔습니다.',
@@ -67,7 +71,7 @@ export const dossiers: Record<string, Dossier> = {
     captures: [
       { key: 'creature-join', label: '공개 그룹 가입', caption: '참여할 그룹을 선택하고 가입하는 흐름', source: creatureRef + 'images/demos/02-group-join.gif', motion: true },
       { key: 'creature-checkin', label: '퀘스트 체크인', caption: '일상 실천을 퀘스트 완료로 기록', source: creatureRef + 'images/demos/05-quest-checkin.gif', motion: true },
-      { key: 'creature-growth', label: '공동 크리처 성장', caption: '퀘스트 보상이 경험치와 성장에 반영되는 모습', source: creatureRef + 'images/demos/07-creature-growth.gif', motion: true },
+      creatureHome,
       { key: 'creature-ranks', label: '개인·그룹 랭킹', caption: '시즌별 개인 순위와 그룹 순위를 확인', source: creatureRef + 'images/demos/08-rankings.gif', motion: true },
     ],
     records: [
@@ -92,6 +96,7 @@ export const dossiers: Record<string, Dossier> = {
   },
   'study-room': {
     strap: '웹 프레임워크 없이 HTTP 요청부터 예약 확정까지',
+    cover: studyRooms,
     background: [
       '사용자가 원하는 공간과 시간을 찾아 예약하고, 관리자는 공간·예약·환불 요청을 한곳에서 관리할 수 있도록 만들었습니다.',
       '라우팅, 세션, 역할 확인, JDBC와 트랜잭션을 직접 연결하면서 웹 프레임워크 아래에서 요청이 처리되는 구조를 학습하는 것이 기술 목표였습니다.',
@@ -114,7 +119,7 @@ export const dossiers: Record<string, Dossier> = {
     ],
     captures: [
       { key: 'study-login', label: '회원 로그인', caption: '테스트 계정 입력과 회원가입 이동', source: studyRef + encodeURIComponent('1로그인 화면.png') },
-      { key: 'study-rooms', label: '스터디룸 목록', caption: '수용 인원과 시간당 이용료 비교', source: studyRef + encodeURIComponent('2스터디룸 목록 화면.png') },
+      studyRooms,
       { key: 'study-reservation', label: '예약 신청', caption: '공간을 확인하고 시작·종료 시간을 입력', source: studyRef + encodeURIComponent('3스터디룸 예약 신청 화면.png') },
       { key: 'study-admin', label: '관리자 홈', caption: '공간·회원·예약·환불 관리 진입점', source: studyRef + encodeURIComponent('4관리자 화면.png') },
     ],
