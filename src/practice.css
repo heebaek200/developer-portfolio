@@ -82,8 +82,37 @@
 .workflow-decisions dt { font-weight: 750; }
 .workflow-decisions dd { margin: 0; }
 
+/* 합의한 지점에서 팀 문서와 실행 계약이 나뉘고 다시 구현으로 이어진다. */
+.workflow-map, .contract-example {
+  margin: 1.75rem 0;
+  padding: clamp(1rem, 3vw, 1.65rem);
+  border: 1px solid var(--line);
+  border-radius: .5rem;
+  background: var(--surface);
+}
+.workflow-map figcaption, .contract-example figcaption { color: var(--ink); font-weight: 750; }
+.workflow-map ol { list-style: none; margin: 1rem 0; padding-inline-start: 1rem; border-inline-start: 2px solid var(--accent); }
+.workflow-map li { position: relative; padding-block: .65rem; }
+.workflow-map li::before {
+  content: "";
+  position: absolute;
+  inset: 1.15rem auto auto -1.3rem;
+  width: .5rem;
+  height: .5rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.workflow-map li > p, .workflow-return { margin: .3rem 0 0; }
+.workflow-branches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin: .8rem 0 0; }
+.workflow-branches > div { padding: .75rem; border-block-start: 2px solid var(--line); background: var(--paper); }
+.workflow-branches dt { font-weight: 750; }
+.workflow-branches dd { margin: .3rem 0 0; }
+.workflow-return { padding: .8rem; border: 1px dashed var(--accent); background: var(--paper); }
+.contract-example pre { margin: .8rem 0 0; padding: .8rem; overflow-wrap: anywhere; white-space: pre-wrap; background: var(--paper); }
+
 @media (max-width: 43rem) {
   .practice-principles > div { grid-template-columns: minmax(0, 1fr); }
+  .workflow-branches { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media print {

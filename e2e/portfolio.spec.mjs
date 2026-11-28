@@ -18,7 +18,7 @@ test('홈에서 상세를 탐색하고 새로고침과 잘못된 ID를 처리한
   await expect(page.getByRole('heading', { level: 1 })).toContainText('팀이 만드는 방식도 개선합니다');
   await page.goto('/#/projects/missing');
   await page.getByRole('link', { name: '프로젝트 목록', exact: true }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('완료 팀 프로젝트');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('완료 프로젝트');
   expect(errors).toEqual([]);
 });
 
@@ -71,7 +71,8 @@ test('화면 폭별 넘침, 테마 유지, 인쇄 레이아웃을 확인한다',
   await page.emulateMedia({ media: 'print' });
   await expect(page.getByRole('navigation')).toBeHidden();
   await expect(footer).toBeHidden();
-  await expect(page.getByRole('heading', { name: '완료 팀 프로젝트' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '완료 프로젝트' })).toBeVisible();
+  await expect(page.getByRole('row').filter({ hasText: 'GitHub Project Bootstrapper' })).toContainText('개인 프로젝트');
   expect((await page.pdf({ preferCSSPageSize: true })).subarray(0, 4).toString()).toBe('%PDF');
 });
 
@@ -177,27 +178,81 @@ test('홈의 첫 탐색이 개발 생산성으로 이어지고 자격증은 경�
   await expect(main.getByRole('row').filter({ hasText: 'STEYR' })).toContainText('공동 육성 종료 후 정립');
   await expect(main.locator('.workflow-decisions > li')).toHaveCount(4);
   await expect(main.locator('.workflow-decisions')).toContainText('REST·GraphQL');
-  await expect(main.locator('[data-gallery="setup"] img')).toHaveCount(2);
+  await expect(main.getByRole('link', { name: 'GitHub Project Bootstrapper 개인 프로젝트 보기' })).toBeVisible();
   await page.goto('/#/career');
   await expect(main.getByRole('heading', { name: '업무 시스템과 복잡한 화면' })).toBeVisible();
   await expect(main.getByRole('heading', { name: '프리랜서 영상 편집·채널 운영' })).toBeVisible();
   await expect(main).toContainText('JLPT N1 · 2021년 취득');
 });
 
-test('두 프로젝트의 첫 시각 자료는 실제 협업 보드이며 기능 갤러리는 유지한다', async ({ page }) => {
-  for (const [project, alt] of [['study-room', '스터디룸 GitHub Projects 로드맵'], ['creature', '작업 칸반']]) {
+test('프로젝트 목록은 실제 제품 화면을 대표 이미지로 사용한다', async ({ page }) => {
+  await page.goto('/#/projects');
+  const covers = page.locator('.project-cover img');
+  const files = ['creature-growth.webp', 'study-rooms.webp', 'bootstrapper-project.png'];
+  await expect(covers).toHaveCount(files.length);
+  for (const [index, file] of files.entries()) {
+    const cover = covers.nth(index);
+    await expect(cover).toHaveAttribute('src', './evidence/' + file);
+    await cover.scrollIntoViewIfNeeded();
+    await cover.evaluate((image) => image.decode());
+  }
+});
+
+test('두 팀 프로젝트는 설계 증빙을 먼저 보여주고 협업과 기능 화면을 유지한다', async ({ page }) => {
+  for (const [project, alt, count] of [['study-room', '스터디룸 Wiki 설계 문서 목록', 2], ['creature', '공동 육성 설계 문서 목록', 5]]) {
     await page.goto('/#/projects/' + project);
     const main = page.getByRole('main');
     const firstImage = main.locator('img').first();
     await expect(firstImage).toHaveAttribute('alt', alt);
-    await firstImage.scrollIntoViewIfNeeded();
-    await firstImage.evaluate((image) => image.decode());
+    await expect(main.locator('[data-gallery="design"] img')).toHaveCount(count);
+    const documents = main.locator('[data-gallery^="design"] img');
+    for (const image of await documents.all()) {
+      await image.scrollIntoViewIfNeeded();
+      await image.evaluate((img) => img.decode());
+    }
+    const trigger = main.getByRole('button', { name: alt + ' 이미지 확대' });
+    await trigger.click();
+    await expect(page.getByRole('dialog').getByRole('img', { name: alt })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(trigger).toBeFocused();
     await expect(main.locator('[data-gallery="features"] img')).toHaveCount(4);
     if (project === 'study-room') {
-      await expect(firstImage).toHaveAttribute('src', './evidence/study-roadmap.png');
+      await expect(main.locator('[data-gallery="records"] img').first()).toHaveAttribute('src', './evidence/study-roadmap.png');
       await expect(main.getByRole('link', { name: '스터디룸 Projects 보드' })).toHaveAttribute('href', 'https://github.com/users/heebaek200/projects/5');
     }
   }
+});
+
+test('개인 프로젝트는 실제 두 GUI와 실행 범위를 제공하고 AI 실행 계약으로 연결한다', async ({ page }) => {
+  await page.goto('/#/projects');
+  const main = page.getByRole('main');
+  await expect(main.getByRole('heading', { name: '팀 프로젝트', exact: true })).toBeVisible();
+  await expect(main.getByRole('heading', { name: '개인 프로젝트', exact: true })).toBeVisible();
+  await main.getByRole('link', { name: 'GitHub Project Bootstrapper', exact: true }).click();
+  await expect(page).toHaveURL(/#\/projects\/bootstrapper$/);
+  const screenshots = main.locator('[data-gallery="setup"] img');
+  await expect(screenshots).toHaveCount(2);
+  const notes = main.locator('[data-gallery="design"] img');
+  await expect(notes).toHaveCount(2);
+  for (const img of await screenshots.or(notes).all()) {
+    await img.scrollIntoViewIfNeeded();
+    await img.evaluate((image) => image.decode());
+  }
+  await expect(main.getByRole('row', { name: /Wiki Home 수동 생성/ })).toBeVisible();
+  await expect(main).toContainText('공개 여부가 Public으로 바뀔 수 있습니다');
+  await main.getByRole('link', { name: '개발 생산성 · 팀 설계와 AI 실행 계약' }).click();
+  await expect(page).toHaveURL(/#\/productivity\/execution-contract$/);
+  await expect(main.getByRole('heading', { name: '팀 설계와 AI 실행 계약' })).toBeFocused();
+  await expect(main.locator('.workflow-map')).toContainText('계약 변경이 필요할 때');
+  await expect(main.locator('.contract-example code')).toContainText('environment.mysql-profiles');
+  await expect(main.getByRole('link', { name: '공통 기반 PR #10' })).toHaveAttribute('href', 'https://github.com/heebaek200/shared-creature-game/pull/10');
+  const contracts = main.locator('[data-gallery="design"] img');
+  await expect(contracts).toHaveCount(4);
+  for (const img of await contracts.all()) {
+    await img.scrollIntoViewIfNeeded();
+    await img.evaluate((image) => image.decode());
+  }
+  await expect(main.locator('a[href*="personal-knowledge-base"]')).toHaveCount(0);
 });
 
 test('이전 개발 생산성·About 주소는 새 정보 구조로 연결된다', async ({ page }) => {
@@ -212,7 +267,7 @@ test('이전 개발 생산성·About 주소는 새 정보 구조로 연결된다
 });
 
 test('공개 페이지와 인쇄 요약에 내부 보고용 문구가 남아 있지 않다', async ({ page }) => {
-  const roots = ['', 'productivity', 'projects', 'projects/creature', 'projects/study-room', 'experiences', 'career', 'skills', 'print'];
+  const roots = ['', 'productivity', 'projects', 'projects/creature', 'projects/study-room', 'projects/bootstrapper', 'experiences', 'career', 'skills', 'print'];
   const paths = new Set(roots.map((root) => '/#/' + root));
   const internalWording = /미검증|NOT RUN|재실행하지 않았|검증 결과에 포함되지|검증 범위 밖|확인하지 못했|별도로 측정하지|제시할 자료는 없|증빙 미확보|\(회고\)|\(사용자 진술\)/;
   const main = page.getByRole('main');

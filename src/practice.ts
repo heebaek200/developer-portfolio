@@ -21,6 +21,7 @@ export const practiceHistory = [
 export const productivityTopics = [
   { id: 'bootstrapper', title: '환경 초기화' },
   { id: 'workflow', title: '명세와 개발 절차' },
+  { id: 'execution-contract', title: '팀 설계와 AI 실행 계약' },
   { id: 'review-bottleneck', title: '리뷰 병목과 검증' },
 ];
 
