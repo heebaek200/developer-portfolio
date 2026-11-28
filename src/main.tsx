@@ -6,6 +6,8 @@ import { dossiers, getProjectCases } from './casebook';
 import { experienceDiagrams, experiences } from './experiences';
 import { DecisionDiagram, Gallery, GrowthFilm, mediaPath } from './exhibits';
 import { careerChapters, careerHighlights, careerStages, contentCareer } from './career-detail';
+import { bootstrapper, bootstrapperArchitecture, bootstrapperDecisions, bootstrapperNotes, bootstrapperProof, bootstrapperSteps } from './bootstrapper';
+import { contractCaptures, contractExample, projectDesigns, workflowProof } from './design-evidence';
 import { practiceControls, practiceEvidence, practiceHistory, practicePrinciples, productivityTopics, projectProcesses, reviewDiagram, setupCaptures, workflowDecisions, workflowRows } from './practice';
 import './styles.css';
 import './practice.css';
@@ -15,10 +17,13 @@ interface OutlineItem { url: string; label: string; children?: OutlineItem[] }
 const menus: OutlineItem[] = [
   { url: '/', label: 'Home' },
   { url: '/productivity', label: '개발 생산성', children: productivityTopics.map(({ id, title }) => ({ url: '/productivity/' + id, label: title })) },
-  { url: '/projects', label: 'Projects', children: projects.map(({ id, title }) => ({
-    url: '/projects/' + id, label: title,
-    children: getProjectCases(id).map((item) => ({ url: casePath(id, item.id), label: item.outlineTitle })),
-  })) },
+  { url: '/projects', label: 'Projects', children: [
+    ...projects.map(({ id, title }) => ({
+      url: '/projects/' + id, label: title,
+      children: getProjectCases(id).map((item) => ({ url: casePath(id, item.id), label: item.outlineTitle })),
+    })),
+    { url: '/projects/bootstrapper', label: 'GitHub Project Bootstrapper · 개인' },
+  ] },
   { url: '/experiences', label: 'Experiences', children: experiences.map(({ id, title }) => ({ url: '/experiences?area=' + id, label: title })) },
   { url: '/career', label: 'Career' },
   { url: '/skills', label: 'Skills' },
@@ -109,6 +114,7 @@ function Layout() {
             <Route path="/career" element={<Career />} />
             <Route path="/skills" element={<Skills />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/bootstrapper" element={<BootstrapperDetail />} />
             <Route path="/projects/:projectId" element={<ProjectDetail />} />
             <Route path="/projects/:projectId/cases/:caseId" element={<ProjectCaseDetail />} />
             <Route path="/experiences" element={<ExperienceIndex />} />
@@ -164,6 +170,7 @@ function Home() {
       </li>)}</ol>
     </section>
     <section className="section"><h2>팀 프로젝트에서 적용한 방식</h2>
+      <p>팀장을 맡은 프로젝트에서 설계 문서가 잘 정리돼 있다는 피드백을 여러 차례 받았습니다. 권한, 화면, API의 기준을 어떻게 합의하고 개발과 리뷰에 적용했는지 각 프로젝트에 담았습니다.</p>
       <div className="project-exhibits">{projects.map((project) => <ProjectTeaser key={project.id} project={project} />)}</div>
     </section>
   </>;
@@ -176,16 +183,15 @@ function PracticePrinciples() {
   </div>)}</dl>;
 }
 
-/** 프로젝트의 실제 협업 화면과 개발 과정의 요약을 연결한다. */
+/** 프로젝트의 실제 설계 목록과 개발 과정의 요약을 연결한다. */
 function ProjectTeaser({ project }: { project: Project }) {
-  const dossier = dossiers[project.id];
-  const cover = dossier.records[0] ?? dossier.captures[2];
+  const cover = projectDesigns[project.id].index;
   return <article className={'project-teaser project-' + project.id}>
     <div className="teaser-copy">
       <p className="eyebrow">{project.team}</p>
       <h2><Link to={'/projects/' + project.id}>{project.title}</Link></h2>
       <p>{project.id === 'creature' ? '초기화부터 명세 변경과 리뷰까지 이어진 팀 개발' : '공동 설계, 이슈 분담, 교차 테스트로 연결한 팀 개발'}</p>
-      <p className="teaser-stack">{dossier.strap}</p>
+      <p className="teaser-stack">{dossiers[project.id].strap}</p>
     </div>
     <img loading="lazy" src={mediaPath(cover.key, cover.extension)} alt={cover.label + ' 실제 화면'} />
   </article>;
@@ -260,12 +266,12 @@ function Productivity() {
     <section className="section">
       <h2 id="bootstrapper" tabIndex={-1}>환경 초기화와 온보딩</h2>
       <p>팀원이 설계와 이슈 작업을 바로 시작할 수 있도록 저장소, Wiki, Projects 준비를 Bootstrapper에 모았습니다. 저장소를 만드는 단계와 팀 작업 환경을 구성하는 단계로 나눠, 각 단계의 결과를 확인하고 이어서 진행할 수 있게 했습니다.</p>
-      <Gallery items={setupCaptures} kind="setup" />
-      <EvidenceLinks items={practiceEvidence.slice(0, 1)} />
+      <p><Link to="/projects/bootstrapper">GitHub Project Bootstrapper 개인 프로젝트 보기</Link></p>
     </section>
     <section className="section">
       <h2 id="workflow" tabIndex={-1}>명세를 팀의 작업 기준으로</h2>
       <p>업무 규칙이 여러 문서와 이슈에 반복되면 수정 사항을 팀 전체에 전달하기 어려웠습니다. 공동 육성에서는 문서별 책임을 나누고, 공통 기반을 합의한 뒤 각 기능을 이슈 단위로 나눴습니다. 이후 이슈별 최신 명세와 리뷰 결과를 대조하는 STEYR를 정립했습니다.</p>
+      <WorkflowMap />
       <DataTable headings={['단계', '도구·절차', '팀의 작업 기준', '적용 시점']} rows={workflowRows} />
       <ol className="workflow-decisions">
         {workflowDecisions.map(({ name, title, situation, input, output, decision, ownership }) => <li key={name}>
@@ -276,6 +282,24 @@ function Productivity() {
         </li>)}
       </ol>
       <EvidenceLinks items={practiceEvidence.slice(1, 3)} />
+    </section>
+    <section className="section">
+      <h2 id="execution-contract" tabIndex={-1}>팀 설계와 AI 실행 계약</h2>
+      <p>팀과 AI는 같은 업무 규칙과 설계 문서를 참조합니다. AI가 맡을 공통 기반 작업은 별도 YAML에 근거 결정 ID, 수용 기준, 의존 관계를 연결해 실행 범위를 정했습니다. 참조 코드 분석은 팀이 함께 쓸 구조와 필요한 기반을 결정하는 데 활용했습니다.</p>
+      <DataTable headings={['기록', '무엇을 정하는가', '언제 갱신하는가']} rows={[
+        ['팀 설계 Markdown', '기능, 권한, 데이터, 화면, API, 코드 규칙의 기준', '팀이 요구사항이나 계약 변경을 합의할 때'],
+        ['결정 기록', '합의한 선택과 그 근거', '선택을 확정하거나 바꿀 때'],
+        ['실행 계약 · common-foundation.yaml', '이번에 구현할 범위와 수용 기준', '합의한 결정이 구현 범위나 검증에 영향을 줄 때'],
+        ['진행 상태 · protocol-state.yaml', '작업을 이어갈 지점과 실제 진행 내역', '이슈·PR·Git 이력과 대조해 진행을 확인할 때'],
+      ]} />
+      <p>결정을 승인해도 해당 구현은 나중으로 미룰 수 있습니다. 그래서 결정의 상태와 구현 포함 여부를 따로 관리했습니다. 합의가 바뀌면 결정이 속한 설계 문서를 갱신하고, 영향받는 실행 계약과 확인 조건을 맞췄습니다.</p>
+      <figure className="contract-example">
+        <figcaption>공동 육성 실행 계약 발췌 · MySQL 환경의 구현 범위와 수용 기준</figcaption>
+        <pre><code>{contractExample}</code></pre>
+      </figure>
+      <p>위 수용 기준은 공통 기반 작업을 인계할 때 확인하도록 정한 조건입니다. 당시 설계와 공통 기반을 적용한 기록은 PR #7과 #10에서 이어서 볼 수 있습니다. 최근 절차는 Markdown으로 정리해 새 작업에 적용합니다.</p>
+      <Gallery items={contractCaptures} kind="design" />
+      <EvidenceLinks items={workflowProof} />
     </section>
     <section className="section">
       <h2 id="review-bottleneck" tabIndex={-1}>구현이 빨라진 뒤, 리뷰가 병목이 되다</h2>
@@ -294,14 +318,78 @@ function Productivity() {
   </Page>;
 }
 
+/** 사람이 합의한 결정이 팀의 설계와 AI의 작업 범위에 함께 반영되는 흐름. */
+function WorkflowMap() {
+  return <figure className="workflow-map">
+    <figcaption>공동 설계에서 구현·검증까지 이어지는 개발 체계</figcaption>
+    <ol>
+      <li><strong>협업 환경 준비</strong><p>Bootstrapper로 저장소·Wiki·Projects의 출발점을 마련합니다.</p></li>
+      <li><strong>공동 설계 · 사람이 결정</strong><p>팀이 업무 규칙과 완료 조건을 합의합니다. 참조할 결정과 설계 문서를 연결합니다.</p>
+        <dl className="workflow-branches">
+          <div><dt>팀 설계</dt><dd>요구사항·업무 규칙·API를 팀과 AI가 참조</dd></div>
+          <div><dt>AI 실행 계약</dt><dd>같은 결정을 근거로 구현 대상·의존 관계·수용 기준 정의</dd></div>
+        </dl>
+      </li>
+      <li><strong>공통 기반 · 범위 안에서 실행</strong><p>AI는 확정된 계약에 따라 기반과 샘플 구현을 돕고, 사람은 실제 흐름과 완료 조건을 확인합니다.</p></li>
+      <li><strong>이슈 단위 구현·리뷰·검증</strong><p>최신 이슈·PR·Git으로 진행을 확인하고, 리뷰에서 실제 구현을 설계와 대조합니다.</p></li>
+    </ol>
+    <p className="workflow-return"><strong>계약 변경이 필요할 때</strong> 합의할 지점으로 돌아가 설계와 실행 계약을 맞춘 뒤 영향받는 동작을 다시 검증합니다.</p>
+  </figure>;
+}
+
 /** 완료 프로젝트 목록을 상세 경로와 연결한다. */
 function Projects() {
-  return <Page title="완료 팀 프로젝트" lead="공동 설계에서 업무 분담, PR 리뷰, 기능 통합과 QA까지 팀이 프로젝트를 추진한 과정을 정리했습니다.">
-    <div className="project-exhibits">{projects.map((project) => <ProjectTeaser key={project.id} project={project} />)}</div>
+  return <Page title="완료 프로젝트" lead="팀의 구현 기준을 세운 프로젝트와 반복되는 협업 준비를 자동화한 개인 도구를 소개합니다.">
+    <section className="section">
+      <h2>팀 프로젝트</h2>
+      <div className="project-exhibits">{projects.map((project) => <ProjectTeaser key={project.id} project={project} />)}</div>
+    </section>
+    <section className="section">
+      <h2>개인 프로젝트</h2>
+      <div className="project-exhibits"><article className="project-teaser project-bootstrapper">
+        <div className="teaser-copy">
+          <h3><Link to="/projects/bootstrapper">{bootstrapper.title}</Link></h3>
+          <p>{bootstrapper.summary}</p><p className="teaser-stack">{bootstrapper.stack}</p>
+        </div>
+        <img loading="lazy" src={mediaPath(setupCaptures[0].key, setupCaptures[0].extension)} alt={setupCaptures[0].label} />
+      </article></div>
+    </section>
+  </Page>;
+}
+
+/** Bootstrapper의 자동화 범위와 제품 설계·검증의 실제 근거를 소개한다. */
+function BootstrapperDetail() {
+  return <Page title={bootstrapper.title} lead={bootstrapper.summary}>
+    <ul className="project-facts"><li>{bootstrapper.team}</li><li>{bootstrapper.period}</li><li>{bootstrapper.stack}</li></ul>
+    <section className="section">
+      <h2>협업의 출발점을 도구로 만들다</h2>
+      <p>팀 프로젝트를 시작할 때마다 저장소, 보호 규칙, Wiki, Projects와 팀원 권한을 따로 설정했습니다. 터미널에 익숙하지 않은 팀원도 같은 환경에서 출발할 수 있도록 반복 설정을 두 단계의 Windows GUI에 담았습니다.</p>
+      <p>자동화할 범위와 실행 순서를 정하고, Codex에 코드 작성을 위임했습니다. 실제 GitHub 환경에서 결과를 확인하며 오류 원인과 수정 방향을 검토했습니다. 이후 Spring Boot 초기화와 협업 템플릿을 확장해 공동 육성 프로젝트의 환경 준비에 사용했습니다.</p>
+      <Gallery items={setupCaptures} kind="setup" />
+    </section>
+    <section className="section">
+      <h2>두 번의 실행과 사람이 맡는 설정</h2>
+      <DataTable headings={['순서', '자동화 범위와 사용자 작업']} rows={bootstrapperSteps} />
+      <DecisionDiagram diagram={bootstrapperArchitecture} />
+      <p className="process-lesson">개인 계정의 새 프로젝트를 준비하는 도구입니다. 같은 대상을 다시 구성하면 Wiki 문서, 라벨, Project 보기·상태·연결 저장소가 교체될 수 있고 대상 저장소의 공개 여부가 Public으로 바뀔 수 있습니다.</p>
+    </section>
+    <section className="section">
+      <h2>실행 결과를 확인하며 바꾼 설계</h2>
+      <DataTable headings={['기술 판단', '확인한 문제와 대응']} rows={bootstrapperDecisions} />
+      <EvidenceLinks items={bootstrapperProof} />
+    </section>
+    <section className="section">
+      <h2>도구에서 팀 개발 절차로</h2>
+      <p>환경을 준비하는 도구를 만든 뒤, 팀이 함께 설계하고 공통 기반을 마련해 일을 나누는 방식도 문서로 정리했습니다. 아래는 그 팀 개발 절차를 구상할 때 남긴 자료입니다.</p>
+      <Gallery items={bootstrapperNotes} kind="design" />
+      <p><Link to="/productivity/execution-contract">개발 생산성 · 팀 설계와 AI 실행 계약</Link></p>
+    </section>
+    <Link to="/projects">프로젝트 목록</Link>
   </Page>;
 }
 
 const projectSections = [
+  ['design', '설계 문서'],
   ['process', '추진 절차'],
   ['team', '역할과 팀 성과'],
   ['purpose', '기획과 서비스'],
@@ -327,12 +415,22 @@ function ProjectDetail() {
   const project = projects.find((item) => item.id === projectId);
   if (!project) return <NotFound recovery="/projects" label="프로젝트 목록" />;
   const dossier = dossiers[project.id];
+  const design = projectDesigns[project.id];
   const process = projectProcesses[project.id];
   const projectCases = getProjectCases(project.id);
   const featured = projectCases.find((item) => item.id === dossier.featuredCase);
   return <Page title={project.title} lead={project.summary}>
     <ul className="project-facts"><li>{project.period}</li><li>{project.team}</li><li>{project.stack}</li></ul>
     <ProjectSections />
+    <section className="section">
+      <h2 id="design" tabIndex={-1}>설계 문서에서 시작한 개발</h2>
+      <p>{design.intro}</p>
+      <Gallery items={[design.index]} kind="design-index" />
+      <h3>대표 문서와 구현 기준</h3>
+      <Gallery items={design.documents} kind="design" />
+      <DecisionDiagram diagram={design.trace} />
+      <EvidenceLinks items={design.links} />
+    </section>
     <section className="section project-process">
       <h2 id="process" tabIndex={-1}>프로젝트 추진 절차</h2>
       <p>{process.lead}</p>
@@ -341,6 +439,7 @@ function ProjectDetail() {
         <h3>{phase}</h3><p>{description}</p>
       </li>)}</ol>
       <p className="process-lesson">{process.learning}</p>
+      {project.id === 'creature' && <p>종료 후 팀 워크숍에서 설계 문서가 처음 맡는 프론트엔드 업무의 기준을 파악하는 데 도움이 됐다는 의견이 나왔습니다. 이슈와 PR로 진행을 확인하고, 일일 리포트로 다음 작업을 정리했으며, 코드 리뷰에서 작성자가 놓친 문제를 발견한 경험도 공유했습니다.</p>}
       <EvidenceLinks items={process.evidence} />
       <p><Link to="/productivity">개발 생산성 페이지</Link></p>
     </section>
@@ -496,7 +595,7 @@ function Print() {
     <section className="section"><h2>개발 방식</h2><PracticePrinciples /></section>
     <section className="section"><h2>경력·자격</h2><DataTable headings={['기간', '역할', '업무']} rows={career} /><DataTable headings={['경험', '주요 업무']} rows={careerHighlights} /><p>{credentials.join(' / ')}</p></section>
     <section className="section"><h2>주요 역량</h2><DataTable headings={['활용 맥락', '기술']} rows={skills} /></section>
-    <section className="section"><h2>완료 팀 프로젝트</h2><DataTable headings={['프로젝트', '역할', '내용']} rows={projects.map((project) => [project.title, project.team, project.summary])} /></section>
+    <section className="section"><h2>완료 프로젝트</h2><DataTable headings={['프로젝트', '역할', '내용']} rows={[...projects, bootstrapper].map((project) => [project.title, project.team, project.summary])} /></section>
     <section className="section"><h2>대표 사례</h2><DataTable headings={['사례', '요약']} rows={[
       ...projects.flatMap((project) => getProjectCases(project.id).slice(0, 1)),
       ...experiences.flatMap((group) => group.items.filter(({ id }) => id !== 'legacy').slice(0, 1)),

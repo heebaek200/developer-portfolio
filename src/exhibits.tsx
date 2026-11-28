@@ -8,7 +8,7 @@ export function mediaPath(key: string, extension = 'webp') {
 }
 
 /** 정지 프레임은 본문에 유지하고 확대 또는 시연은 요청 시에만 연다. */
-function Exhibit({ item }: { item: Capture }) {
+function Exhibit({ item, document = false }: { item: Capture; document?: boolean }) {
   const titleId = useId();
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -30,14 +30,14 @@ function Exhibit({ item }: { item: Capture }) {
         <img loading="lazy" decoding="async" src={imageSource} alt={item.label} onError={() => setFailed(true)} />
         <span className="exhibit-action" aria-hidden="true">{item.motion ? '시연 보기' : '이미지 확대'}</span>
       </button>}
-    <figcaption><strong>{item.label}</strong><span>{item.caption}</span> <a href={item.source}>원본</a></figcaption>
-    <dialog ref={dialog} className="exhibit-dialog" aria-labelledby={titleId} onClose={() => {
+    <figcaption><strong>{item.label}</strong><span>{item.caption}</span>{item.source && <> <a href={item.source}>원본</a></>}</figcaption>
+    <dialog ref={dialog} className="exhibit-dialog" data-document={document || undefined} aria-labelledby={titleId} onClose={() => {
       setOpen(false);
       trigger.current?.focus();
     }}>
       <header><h2 id={titleId}>{item.label}</h2><form method="dialog"><button>닫기</button></form></header>
       {open && (item.motion
-        ? motionFailed ? <p role="status">시연을 재생할 수 없습니다. <a href={item.source}>원본 보기</a></p>
+        ? motionFailed ? <p role="status">시연을 재생할 수 없습니다. {item.source && <a href={item.source}>원본 보기</a>}</p>
           : <video controls playsInline preload="metadata" poster={imageSource} src={mediaPath(item.key, 'mp4')} aria-label={item.label + ' 녹화 화면'} onError={() => setMotionFailed(true)} />
         : <img src={imageSource} alt={item.label} />)}
     </dialog>
@@ -45,8 +45,9 @@ function Exhibit({ item }: { item: Capture }) {
 }
 
 /** 시연과 관리 증빙을 원본 출처와 함께 전시한다. */
-export function Gallery({ items, kind = 'features' }: { items: Capture[]; kind?: 'features' | 'records' | 'setup' }) {
-  return <div className="exhibit-grid" data-gallery={kind}>{items.map((item) => <Exhibit key={item.key} item={item} />)}</div>;
+export function Gallery({ items, kind = 'features' }: { items: Capture[]; kind?: 'features' | 'records' | 'setup' | 'design-index' | 'design' }) {
+  const document = kind === 'design-index' || kind === 'design';
+  return <div className="exhibit-grid" data-gallery={kind}>{items.map((item) => <Exhibit key={item.key} item={item} document={document} />)}</div>;
 }
 
 /** 성장 전체 영상은 선택한 시점에 로드하며 원본 링크를 유지한다. */

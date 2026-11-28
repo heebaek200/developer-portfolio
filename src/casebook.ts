@@ -5,7 +5,7 @@ export interface Capture {
   extension?: 'png';
   label: string;
   caption: string;
-  source: string;
+  source?: string;
   motion?: boolean;
 }
 

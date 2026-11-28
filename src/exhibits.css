@@ -11,6 +11,8 @@
   border-radius: .65rem;
 }
 .project-teaser.project-study-room { background: #183549; }
+.project-teaser.project-bootstrapper { background: #31403c; }
+.project-teaser.project-bootstrapper h3 { margin-block: .15rem .6rem; font-size: 1.6rem; }
 .teaser-copy { padding: clamp(1.25rem, 3vw, 2.8rem); word-break: keep-all; overflow-wrap: anywhere; }
 .project-teaser .eyebrow, .teaser-stack { color: #d1ded4; font-size: .875rem; }
 .project-teaser a { color: inherit; text-decoration-thickness: .07em; }
@@ -72,6 +74,14 @@
 .exhibit-dialog::backdrop { background: rgb(10 19 18 / 72%); }
 .exhibit-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
 .exhibit-dialog :is(img, video) { display: block; max-width: 100%; max-height: 74dvh; width: auto; margin-inline: auto; }
+
+/* 문서의 글자는 본문 폭에 맞추고, 확대 창에서는 세로로 읽을 수 있게 한다. */
+[data-gallery="design-index"] { grid-template-columns: minmax(0, 1fr); }
+[data-gallery="design"] { grid-template-columns: minmax(0, 1fr); }
+[data-gallery^="design"] .exhibit-trigger img, [data-gallery="setup"] .exhibit-trigger img { aspect-ratio: auto; }
+.exhibit-dialog[data-document] { width: min(94vw, 76rem); overflow: auto; }
+.exhibit-dialog[data-document] header { position: sticky; top: 0; padding-block: .35rem; background: var(--paper); }
+.exhibit-dialog[data-document] img { width: 100%; max-height: none; }
 
 /* 비교는 나란히, 시퀀스는 차례가 맞는 두 요청 열로 표현한다. */
 .decision-diagram, .runtime-chart { margin: 1.6rem 0; padding: clamp(.8rem, 2vw, 1.3rem); border: 1px solid var(--line); border-radius: .45rem; background: var(--surface); }
